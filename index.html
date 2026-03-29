@@ -11,6 +11,7 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <style>
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -32,7 +33,7 @@
 <script type="text/babel">
 const {useState,useEffect,useMemo,useCallback}=React;
 
-// ========== SVG ICON SYSTEM ==========
+// ═══════ js/icons.js ═══════
 const I=({d,size=20,cls=""})=><svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cls}>{d}</svg>;
 const Ic={
   cloud:    <><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></>,
@@ -87,8 +88,11 @@ const Ic={
   zap:      <><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></>,
   hash:     <><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></>,
   box:      <><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></>,
+  wrench:   <><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></>,
 };
 
+
+// ═══════ js/data.js ═══════
 // ========== INITIAL DATA ==========
 const CATS=[
   {id:'CAT-01',name:'วัสดุสิ้นเปลือง (Consumables)',desc:'ลวดเชื่อม, แก๊ส, ใบตัด'},
@@ -172,6 +176,32 @@ const INIT_STEELS=[
   {id:'STL-014',type:'SHEET',grade:'ALU',thickness:3.0,width:600,length:900,qty:2,status:'เศษเหลือ',note:'เศษจาก Job #2568-028',minScrap:150,unitPrice:0},
   {id:'STL-015',type:'SHEET',grade:'SS400',thickness:6.0,width:1524,length:3048,qty:1,status:'พร้อมใช้',note:'แผ่นเต็ม 5\'×10\'',minScrap:300,unitPrice:5500},
 ];
+// ========== TOOL LENDING DATA ==========
+const TOOL_CONDITIONS=['ปกติ','สึกหรอเล็กน้อย','ต้องซ่อมแซม','ชำรุด/ใช้งานไม่ได้','สูญหาย'];
+const TOOL_COND_COLORS={'ปกติ':'text-emerald-700 bg-emerald-50','สึกหรอเล็กน้อย':'text-amber-700 bg-amber-50','ต้องซ่อมแซม':'text-orange-700 bg-orange-50','ชำรุด/ใช้งานไม่ได้':'text-rose-700 bg-rose-50','สูญหาย':'text-slate-700 bg-slate-100'};
+const INIT_TOOLS=[
+  {id:'TL-001',name:'ค้อนหงอน',serial:'HAM-001',category:'เครื่องมือทั่วไป',condition:'ปกติ',location:'คลังเครื่องมือ',price:350,image:'https://placehold.co/80x80/f59e0b/fff?text=HAM',status:'พร้อมใช้',note:''},
+  {id:'TL-002',name:'ลูกหมูเครื่องเจียร์ 4"',serial:'GRD-001',category:'เครื่องมือไฟฟ้า',condition:'ปกติ',location:'คลังเครื่องมือ',price:2800,image:'https://placehold.co/80x80/d97706/fff?text=GRD',status:'พร้อมใช้',note:'Makita M9510B'},
+  {id:'TL-003',name:'ลูกหมูเครื่องเจียร์ 4"',serial:'GRD-002',category:'เครื่องมือไฟฟ้า',condition:'สึกหรอเล็กน้อย',location:'คลังเครื่องมือ',price:2800,image:'https://placehold.co/80x80/d97706/fff?text=GRD',status:'ถูกยืม',note:'Bosch GWS 060'},
+  {id:'TL-004',name:'สว่านไฟฟ้า',serial:'DRL-001',category:'เครื่องมือไฟฟ้า',condition:'ปกติ',location:'คลังเครื่องมือ',price:3500,image:'https://placehold.co/80x80/ea580c/fff?text=DRL',status:'พร้อมใช้',note:'Makita HP1630'},
+  {id:'TL-005',name:'ตลับเมตร 5 เมตร',serial:'TAP-001',category:'เครื่องมือวัด',condition:'ปกติ',location:'คลังเครื่องมือ',price:180,image:'https://placehold.co/80x80/0891b2/fff?text=TAP',status:'พร้อมใช้',note:''},
+  {id:'TL-006',name:'ตลับเมตร 5 เมตร',serial:'TAP-002',category:'เครื่องมือวัด',condition:'ปกติ',location:'คลังเครื่องมือ',price:180,image:'https://placehold.co/80x80/0891b2/fff?text=TAP',status:'ถูกยืม',note:''},
+  {id:'TL-007',name:'ตลับเมตร 7.5 เมตร',serial:'TAP-003',category:'เครื่องมือวัด',condition:'ปกติ',location:'คลังเครื่องมือ',price:250,image:'https://placehold.co/80x80/0891b2/fff?text=TAP',status:'พร้อมใช้',note:''},
+  {id:'TL-008',name:'ประแจเลื่อน 10"',serial:'WRN-001',category:'เครื่องมือทั่วไป',condition:'ปกติ',location:'คลังเครื่องมือ',price:420,image:'https://placehold.co/80x80/059669/fff?text=WRN',status:'พร้อมใช้',note:''},
+  {id:'TL-009',name:'ประแจแหวนชุด',serial:'WRN-002',category:'เครื่องมือทั่วไป',condition:'ปกติ',location:'คลังเครื่องมือ',price:650,image:'https://placehold.co/80x80/059669/fff?text=WRN',status:'ถูกยืม',note:'6-32mm'},
+  {id:'TL-010',name:'เครื่องเชื่อม MIG',serial:'WLD-001',category:'เครื่องมือไฟฟ้า',condition:'ปกติ',location:'คลังเครื่องมือ',price:18500,image:'https://placehold.co/80x80/dc2626/fff?text=WLD',status:'พร้อมใช้',note:'Lincoln 180C'},
+  {id:'TL-011',name:'เลื่อยวงเดือน',serial:'SAW-001',category:'เครื่องมือไฟฟ้า',condition:'ปกติ',location:'คลังเครื่องมือ',price:4200,image:'https://placehold.co/80x80/7c3aed/fff?text=SAW',status:'ซ่อมแซม',note:'Makita 5806B — รอเปลี่ยนใบ'},
+  {id:'TL-012',name:'คีมล็อค',serial:'PLC-001',category:'เครื่องมือทั่วไป',condition:'ปกติ',location:'คลังเครื่องมือ',price:280,image:'https://placehold.co/80x80/475569/fff?text=PLC',status:'พร้อมใช้',note:''},
+  {id:'TL-013',name:'ไขควงชุด',serial:'SCR-001',category:'เครื่องมือทั่วไป',condition:'ปกติ',location:'คลังเครื่องมือ',price:350,image:'https://placehold.co/80x80/475569/fff?text=SCR',status:'พร้อมใช้',note:'แบน+แฉก 8 ชิ้น'},
+];
+const todayStr=()=>new Date().toLocaleDateString('th-TH');
+const nowStr=()=>new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+const INIT_LOANS=[
+  {id:'LN-001',toolId:'TL-003',borrower:'S02',borrowerName:'ธีรพงษ์ ไชยสุวรรณ์',dept:'ฝ่ายเชื่อม',borrowDate:'25/03/2569',borrowTime:'08:30',dueDate:'27/03/2569',purpose:'งาน Job #2569-041 เจียร์ขอบแผ่นเหล็ก',conditionOut:'ปกติ',status:'ยืมอยู่',returnDate:'',returnTime:'',conditionIn:'',repairNote:'',inspector:''},
+  {id:'LN-002',toolId:'TL-006',borrower:'S01',borrowerName:'สมชาย ใจดี',dept:'ฝ่ายตัดเลเซอร์',borrowDate:'24/03/2569',borrowTime:'09:00',dueDate:'24/03/2569',purpose:'วัดชิ้นงาน Job #2569-039',conditionOut:'ปกติ',status:'ยืมอยู่',returnDate:'',returnTime:'',conditionIn:'',repairNote:'',inspector:''},
+  {id:'LN-003',toolId:'TL-009',borrower:'S05',borrowerName:'วิชัย บุญมาก',dept:'ฝ่ายประกอบ',borrowDate:'23/03/2569',borrowTime:'13:00',dueDate:'25/03/2569',purpose:'ประกอบตู้ Cabinet',conditionOut:'ปกติ',status:'ยืมอยู่',returnDate:'',returnTime:'',conditionIn:'',repairNote:'',inspector:''},
+  {id:'LN-004',toolId:'TL-011',borrower:'S06',borrowerName:'อนันต์ ศรีสุข',dept:'ฝ่ายซ่อมบำรุง',borrowDate:'18/03/2569',borrowTime:'10:00',dueDate:'19/03/2569',purpose:'ตัดเหล็กฉากสำหรับชั้นวาง',conditionOut:'ปกติ',status:'คืนแล้ว — ส่งซ่อม',returnDate:'19/03/2569',returnTime:'15:00',conditionIn:'ต้องซ่อมแซม',repairNote:'ใบเลื่อยบิ่น ต้องเปลี่ยนใบใหม่',inspector:'พนักงานคลัง'},
+];
 // ========== USER ACCOUNTS ==========
 const ACCOUNTS=[
   {id:'U01',username:'admin',password:'1234',fullName:'Administrator',role:'Admin',dept:'ทุกแผนก',avatar:'AD'},
@@ -185,12 +215,66 @@ const ACCOUNTS=[
   {id:'U09',username:'fm',password:'1234',fullName:'ผู้จัดการโรงงาน',role:'FM',dept:'ฝ่ายผลิต',avatar:'FM'},
 ];
 
-// ========== LOCAL STORAGE PERSISTENCE ==========
+// ========== SUPABASE PERSISTENCE ==========
+const SUPABASE_URL='https://ypsxazjokwesnwaoaglr.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlwc3hhempva3dlc253YW9hZ2xyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NzEzMDUsImV4cCI6MjA5MDM0NzMwNX0.14VKOYGsrfVuarsjZNVq3GqzBO6gTVChwk4jjDZT3ns';
+const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+// Table mapping: localStorage key -> Supabase table name
+const TABLE_MAP={
+  items:'items', txns:'txns', reqs:'reqs', prs:'prs', notifs:'notifs',
+  cats:'cats', depts:'depts', locs:'locs', sups:'sups', apvs:'apvs',
+  steels:'steels', steelTxns:'steel_txns', toolItems:'tool_items',
+  toolLoans:'tool_loans', accounts:'accounts'
+};
+
+// Load from Supabase (returns fallback if empty/error)
+const sbLoad=async(key,fallback)=>{
+  try{
+    const table=TABLE_MAP[key];
+    if(!table)return fallback;
+    const{data,error}=await supabase.from(table).select('*');
+    if(error){console.error('Supabase load error ['+key+']:',error);return fallback;}
+    if(!data||data.length===0)return fallback;
+    // Transform: remove Supabase internal columns, reconstruct original shape
+    return data.map(row=>{
+      const{created_at,...rest}=row;
+      return rest;
+    });
+  }catch(e){console.error('sbLoad error:',e);return fallback;}
+};
+
+// Save to Supabase (upsert entire dataset)
+const sbSave=async(key,val)=>{
+  try{
+    const table=TABLE_MAP[key];
+    if(!table||!val||!Array.isArray(val))return;
+    // Delete all then insert (simple replace strategy)
+    await supabase.from(table).delete().neq('id','__never_match__');
+    if(val.length>0){
+      const{error}=await supabase.from(table).upsert(val,{onConflict:'id'});
+      if(error)console.error('Supabase save error ['+key+']:',error);
+    }
+  }catch(e){console.error('sbSave error:',e);}
+};
+
+// Clear all Supabase tables
+const sbClear=async()=>{
+  try{
+    for(const key of Object.keys(TABLE_MAP)){
+      const table=TABLE_MAP[key];
+      await supabase.from(table).delete().neq('id','__never_match__');
+    }
+  }catch(e){console.error('sbClear error:',e);}
+};
+
+// Keep localStorage as fast cache (optional fallback)
 const LS_KEY='tgt-stock-v9';
 const lsLoad=(key,fallback)=>{try{const d=localStorage.getItem(LS_KEY+'-'+key);return d?JSON.parse(d):fallback;}catch(e){return fallback;}};
 const lsSave=(key,val)=>{try{localStorage.setItem(LS_KEY+'-'+key,JSON.stringify(val));}catch(e){console.error('localStorage save failed:',e);}};
 const lsClear=()=>{Object.keys(localStorage).filter(k=>k.startsWith(LS_KEY)).forEach(k=>localStorage.removeItem(k));};
 
+// ═══════ js/shared.js ═══════
 // ========== IMAGE UPLOAD UTILITY ==========
 const resizeImage=(file,maxPx=400)=>new Promise((resolve,reject)=>{
   const reader=new FileReader();
@@ -249,10 +333,13 @@ const MImgUpload=({value,onChange,label='รูปภาพ'})=>{
   );
 };
 
+
+// ═══════ js/modules/state.js ═══════
 function App(){
   const [user,setUser]=useState(null);
   const [loginErr,setLoginErr]=useState('');
   const [view,setView]=useState('dashboard');
+  const [showNotifPanel,setShowNotifPanel]=useState(false);
   const [mob,setMob]=useState(false);
   const [menuItem,setMenuItem]=useState(true);
   const [menuRpt,setMenuRpt]=useState(false);
@@ -271,37 +358,103 @@ function App(){
   const [steels,setSteels]=useState(()=>lsLoad('steels',INIT_STEELS));
   const [steelTxns,setSteelTxns]=useState(()=>lsLoad('steelTxns',[]));
   const [menuSteel,setMenuSteel]=useState(false);
+  // ===== TOOL LENDING STATE =====
+  const [toolItems,setToolItems]=useState(()=>lsLoad('toolItems',INIT_TOOLS));
+  const [toolLoans,setToolLoans]=useState(()=>lsLoad('toolLoans',INIT_LOANS));
+  const [menuTool,setMenuTool]=useState(false);
   const [toast,setToast]=useState({show:false,msg:'',type:'ok'});
   const [isMobile,setIsMobile]=useState(window.innerWidth<768);
+  const [accounts,setAccounts]=useState(()=>lsLoad('accounts',ACCOUNTS));
+  const [menuAccess,setMenuAccess]=useState(false);
+
+  // ===== SUPABASE: Loading state & initial data fetch =====
+  const [dataLoaded,setDataLoaded]=useState(false);
+  const [loadingMsg,setLoadingMsg]=useState('กำลังเชื่อมต่อ Supabase...');
+  const dataLoadedRef=React.useRef(false);
+
+  useEffect(()=>{
+    let cancelled=false;
+    const loadAll=async()=>{
+      try{
+        setLoadingMsg('กำลังโหลดข้อมูลจาก Supabase Cloud...');
+        const results=await Promise.all([
+          sbLoad('items',INIT_ITEMS),
+          sbLoad('txns',[]),
+          sbLoad('reqs',[]),
+          sbLoad('prs',[]),
+          sbLoad('notifs',[]),
+          sbLoad('cats',CATS),
+          sbLoad('depts',DEPTS),
+          sbLoad('locs',LOCS),
+          sbLoad('sups',SUPS),
+          sbLoad('apvs',APVS),
+          sbLoad('steels',INIT_STEELS),
+          sbLoad('steelTxns',[]),
+          sbLoad('toolItems',INIT_TOOLS),
+          sbLoad('toolLoans',INIT_LOANS),
+          sbLoad('accounts',ACCOUNTS),
+        ]);
+        if(cancelled)return;
+        setItems(results[0]);
+        setTxns(results[1]);
+        setReqs(results[2]);
+        setPrs(results[3]);
+        setNotifs(results[4]);
+        setCats(results[5]);
+        setDepts(results[6]);
+        setLocs(results[7]);
+        setSups(results[8]);
+        setApvs(results[9]);
+        setSteels(results[10]);
+        setSteelTxns(results[11]);
+        setToolItems(results[12]);
+        setToolLoans(results[13]);
+        setAccounts(results[14]);
+        // Also cache to localStorage
+        const keys=['items','txns','reqs','prs','notifs','cats','depts','locs','sups','apvs','steels','steelTxns','toolItems','toolLoans','accounts'];
+        keys.forEach((k,i)=>lsSave(k,results[i]));
+        setLoadingMsg('โหลดข้อมูลสำเร็จ!');
+        setTimeout(()=>{if(!cancelled){dataLoadedRef.current=true;setDataLoaded(true);}},300);
+      }catch(e){
+        console.error('Failed to load from Supabase:',e);
+        setLoadingMsg('โหลดจาก Supabase ไม่สำเร็จ — ใช้ข้อมูล localStorage');
+        setTimeout(()=>{if(!cancelled){dataLoadedRef.current=true;setDataLoaded(true);}},1000);
+      }
+    };
+    loadAll();
+    return()=>{cancelled=true;};
+  },[]);
+
   useEffect(()=>{const h=()=>setIsMobile(window.innerWidth<768);window.addEventListener('resize',h);return()=>window.removeEventListener('resize',h);},[]);
 
-  // ===== AUTO-SAVE to localStorage on every state change =====
-  useEffect(()=>{lsSave('items',items);},[items]);
-  useEffect(()=>{lsSave('txns',txns);},[txns]);
-  useEffect(()=>{lsSave('reqs',reqs);},[reqs]);
-  useEffect(()=>{lsSave('prs',prs);},[prs]);
-  useEffect(()=>{lsSave('notifs',notifs);},[notifs]);
-  useEffect(()=>{lsSave('cats',cats);},[cats]);
-  useEffect(()=>{lsSave('depts',depts);},[depts]);
-  useEffect(()=>{lsSave('locs',locs);},[locs]);
-  useEffect(()=>{lsSave('sups',sups);},[sups]);
-  useEffect(()=>{lsSave('apvs',apvs);},[apvs]);
-  useEffect(()=>{lsSave('steels',steels);},[steels]);
-  useEffect(()=>{lsSave('steelTxns',steelTxns);},[steelTxns]);
-  useEffect(()=>{lsSave('accounts',accounts);},[accounts]);
+  // ===== AUTO-SAVE to localStorage + Supabase on every state change =====
+  useEffect(()=>{lsSave('items',items);if(dataLoadedRef.current)sbSave('items',items);},[items]);
+  useEffect(()=>{lsSave('txns',txns);if(dataLoadedRef.current)sbSave('txns',txns);},[txns]);
+  useEffect(()=>{lsSave('reqs',reqs);if(dataLoadedRef.current)sbSave('reqs',reqs);},[reqs]);
+  useEffect(()=>{lsSave('prs',prs);if(dataLoadedRef.current)sbSave('prs',prs);},[prs]);
+  useEffect(()=>{lsSave('notifs',notifs);if(dataLoadedRef.current)sbSave('notifs',notifs);},[notifs]);
+  useEffect(()=>{lsSave('cats',cats);if(dataLoadedRef.current)sbSave('cats',cats);},[cats]);
+  useEffect(()=>{lsSave('depts',depts);if(dataLoadedRef.current)sbSave('depts',depts);},[depts]);
+  useEffect(()=>{lsSave('locs',locs);if(dataLoadedRef.current)sbSave('locs',locs);},[locs]);
+  useEffect(()=>{lsSave('sups',sups);if(dataLoadedRef.current)sbSave('sups',sups);},[sups]);
+  useEffect(()=>{lsSave('apvs',apvs);if(dataLoadedRef.current)sbSave('apvs',apvs);},[apvs]);
+  useEffect(()=>{lsSave('steels',steels);if(dataLoadedRef.current)sbSave('steels',steels);},[steels]);
+  useEffect(()=>{lsSave('steelTxns',steelTxns);if(dataLoadedRef.current)sbSave('steelTxns',steelTxns);},[steelTxns]);
+  useEffect(()=>{lsSave('toolItems',toolItems);if(dataLoadedRef.current)sbSave('toolItems',toolItems);},[toolItems]);
+  useEffect(()=>{lsSave('toolLoans',toolLoans);if(dataLoadedRef.current)sbSave('toolLoans',toolLoans);},[toolLoans]);
+  useEffect(()=>{lsSave('accounts',accounts);if(dataLoadedRef.current)sbSave('accounts',accounts);},[accounts]);
 
   // ===== RESET to default data (Admin only) =====
-  const resetAllData=()=>{
+  const resetAllData=async()=>{
     if(!window.confirm('ยืนยันรีเซ็ตข้อมูลทั้งหมดกลับเป็นค่าเริ่มต้น?\n\nข้อมูลที่แก้ไขทั้งหมดจะหายไป รวมถึงธุรกรรม, ใบเบิก, PR, และการแจ้งเตือน'))return;
     lsClear();
+    await sbClear();
     setItems(INIT_ITEMS);setTxns([]);setReqs([]);setPrs([]);setNotifs([]);
     setCats(CATS);setDepts(DEPTS);setLocs(LOCS);setSups(SUPS);setApvs(APVS);
     setSteels(INIT_STEELS);setSteelTxns([]);setAccounts(ACCOUNTS);
-    notify('รีเซ็ตข้อมูลทั้งหมดสำเร็จ — กลับเป็นค่าเริ่มต้น');
+    setToolItems(INIT_TOOLS);setToolLoans(INIT_LOANS);
+    notify('รีเซ็ตข้อมูลทั้งหมดสำเร็จ — กลับเป็นค่าเริ่มต้น (Supabase + localStorage)');
   };
-
-  const [accounts,setAccounts]=useState(()=>lsLoad('accounts',ACCOUNTS));
-  const [menuAccess,setMenuAccess]=useState(false);
 
   // ========== USER ACCESS MANAGEMENT DATA ==========
   const [roles,setRoles]=useState([
@@ -327,6 +480,7 @@ function App(){
     'ROLE-06':{dashboard:{v:1,c:0,e:0,d:0},items:{v:1,c:0,e:0,d:0},requisition:{v:1,c:1,e:0,d:0},approvals:{v:0,c:0,e:0,d:0},reports:{v:0,c:0,e:0,d:0},settings:{v:0,c:0,e:0,d:0},steel:{v:1,c:0,e:0,d:0},access:{v:0,c:0,e:0,d:0}},
     'ROLE-07':{dashboard:{v:1,c:0,e:0,d:0},items:{v:1,c:0,e:0,d:0},requisition:{v:1,c:0,e:0,d:0},approvals:{v:1,c:0,e:1,d:0},reports:{v:1,c:0,e:0,d:0},settings:{v:1,c:0,e:0,d:0},steel:{v:1,c:1,e:1,d:0},access:{v:0,c:0,e:0,d:0}},
   });
+  const [permSelRole,setPermSelRole]=useState('ROLE-01');
   const [workflows,setWorkflows]=useState([
     {id:'WF-01',name:'อนุมัติใบเบิกวัสดุ',module:'requisition',steps:[{type:'หัวหน้าแผนก',label:'หัวหน้าแผนก'},{type:'บุคคล',label:'FM (ผู้จัดการโรงงาน)',userId:'U09'},{type:'บุคคล',label:'GM (นางโชติกา)',userId:'U04'},{type:'บุคคล',label:'MD (คุณธนชาติ)',userId:'U03'}]},
     {id:'WF-02',name:'อนุมัติใบสั่งซื้อ (PO)',module:'purchasing',steps:[{type:'หัวหน้าแผนก',label:'หัวหน้าแผนก'},{type:'บุคคล',label:'FM (ผู้จัดการโรงงาน)',userId:'U09'},{type:'บุคคล',label:'MD (คุณธนชาติ)',userId:'U03'}]},
@@ -383,6 +537,19 @@ function App(){
     </div>);
   };
 
+  // ===== LOADING SCREEN (while Supabase data loads) =====
+  if(!dataLoaded) return(<div style={{minHeight:'100vh',background:'linear-gradient(135deg,#059669 0%,#047857 40%,#065f46 100%)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'Sarabun',sans-serif"}}>
+    <div style={{textAlign:'center',color:'#fff'}}>
+      <div style={{fontSize:48,marginBottom:16}}>☁️</div>
+      <div style={{fontSize:22,fontWeight:700,marginBottom:8}}>TGT Store V9.0</div>
+      <div style={{fontSize:14,opacity:0.9,marginBottom:20}}>{loadingMsg}</div>
+      <div style={{width:200,height:4,background:'rgba(255,255,255,0.2)',borderRadius:2,margin:'0 auto',overflow:'hidden'}}>
+        <div style={{width:'60%',height:'100%',background:'#fff',borderRadius:2,animation:'loading 1.5s ease-in-out infinite'}}></div>
+      </div>
+      <style>{'@keyframes loading{0%{transform:translateX(-100%)}50%{transform:translateX(100%)}100%{transform:translateX(-100%)}}'}</style>
+    </div>
+  </div>);
+
   if(!user) return <LoginScreen/>;
   const role=user.role;
   const isAdmin=role==='Admin';
@@ -395,6 +562,7 @@ function App(){
   const canApprove=isAdmin||isMgmt||isFM;
   const canSteel=isAdmin||isStore||isDesign||isMgmt||isFM;
   const canReturnSteel=isAdmin||isStore||isFM;
+  const canManageTool=isAdmin||isStore||isMgmt||isFM;
   const logout=()=>{setUser(null);};
 
   const notify=(msg,type='ok')=>{setToast({show:true,msg,type});setTimeout(()=>setToast({show:false,msg:'',type:'ok'}),3000);};
@@ -405,7 +573,7 @@ function App(){
   const deptName=id=>depts.find(d=>d.id===id)?.name||id;
   const locName=id=>locs.find(l=>l.id===id)?.name||id;
   const supName=id=>sups.find(s=>s.id===id)?.name||(id||'-');
-  const nav=v=>{setView(v);setMob(false);};
+  const nav=v=>{setView(v);setMob(false);setShowNotifPanel(false);};
 
   // ===== Confirm Dialog =====
   const Confirm=({show,title,msg,onOk,onNo,danger})=>{
@@ -475,6 +643,8 @@ function App(){
     <button onClick={()=>window.print()} className="bg-white border text-slate-600 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 h-[38px]"><I d={Ic.print} size={15}/>พิมพ์</button>
   </div>)};
 
+
+// ═══════ js/modules/dashboard.js ═══════
   // ==================== DASHBOARD ====================
   const Dashboard=()=>{
     // ===== SUMMARY CALCULATIONS =====
@@ -638,6 +808,8 @@ function App(){
     </div>);
   };
 
+
+// ═══════ js/modules/items.js ═══════
   // ==================== ITEMS LIST (FULL CRUD) ====================
   const ItemsView=()=>{
     const [modal,setModal]=useState(false);
@@ -910,6 +1082,8 @@ function App(){
     </Wrap>);
   };
 
+
+// ═══════ js/modules/approvals.js ═══════
   // ==================== APPROVALS ====================
   const ApprovalView=()=>{
     const [rejId,setRejId]=useState(null);const [rejR,setRejR]=useState('');
@@ -966,6 +1140,8 @@ function App(){
     </Wrap>);
   };
 
+
+// ═══════ js/modules/reports.js ═══════
   // ==================== REPORTS ====================
   const RptSummary=()=>{const [fil,setFil]=useState({cat:'',dept:'',month:'',start:'',end:''});const filtered=items.filter(it=>{if(fil.cat&&it.category!==fil.cat)return false;return true;});return(<Wrap title="สรุปยอดคงเหลือ" icon={Ic.bar} onExport={()=>toExcel(['#','รหัส','รายการ','หมวดหมู่','ยกมา','รับเข้า','เบิก','คงเหลือ','หน่วย'],filtered.map((it,i)=>[i+1,it.id,it.name,catName(it.category),it.prevBalance,it.receive,it.pay,it.balance,it.unit]),'สรุปยอดคงเหลือ')}><Fil cat month onFilter={setFil}/><div className="overflow-x-auto border rounded-xl"><table className="w-full text-sm text-left whitespace-nowrap"><thead className="bg-slate-50 text-slate-500"><tr><th className="p-3 text-center w-12">#</th><th className="p-3">รหัส</th><th className="p-3">รายการ</th><th className="p-3 text-center">ยกมา</th><th className="p-3 text-center">รับเข้า</th><th className="p-3 text-center">เบิก</th><th className="p-3 text-center font-bold text-emerald-700">คงเหลือ</th><th className="p-3 text-center">หน่วย</th></tr></thead><tbody className="divide-y">{filtered.map((it,i)=><tr key={it.id} className="hover:bg-slate-50/50"><td className="p-3 text-center text-slate-400">{i+1}</td><td className="p-3 font-mono text-slate-500">{it.id}</td><td className="p-3"><div className="font-bold text-slate-800">{it.name}</div><div className="text-xs text-slate-400">{catName(it.category)}</div></td><td className="p-3 text-center">{it.prevBalance}</td><td className="p-3 text-center text-emerald-600 font-bold bg-emerald-50/30">+{it.receive}</td><td className="p-3 text-center text-rose-500 font-bold bg-rose-50/30">-{it.pay}</td><td className="p-3 text-center font-black text-slate-800 bg-slate-50">{it.balance}</td><td className="p-3 text-center text-slate-500">{it.unit}</td></tr>)}</tbody></table></div></Wrap>)};
 
@@ -1083,6 +1259,8 @@ function App(){
     </Wrap>);
   };
 
+
+// ═══════ js/modules/steel.js ═══════
   // ==================== STEEL STOCK MODULE ====================
 
   const gradeInfo=gid=>STEEL_GRADES.find(g=>g.id===gid)||{name:gid,color:'#94a3b8'};
@@ -1112,6 +1290,8 @@ function App(){
   const steelTotalValue=(s)=>(s.unitPrice||0)*s.qty;
   const totalSteelStockValue=steels.filter(s=>s.status!=='Scrap').reduce((sum,s)=>sum+(s.unitPrice||0)*s.qty,0);
 
+
+// ═══════ js/modules/pr.js ═══════
   // ==================== PURCHASE REQUEST (PR) MANAGEMENT — Desktop ====================
   const PRView=()=>{
     const [selPR,setSelPR]=useState(null);const [noteText,setNoteText]=useState('');const [filterSt,setFilterSt]=useState('all');
@@ -1475,6 +1655,8 @@ function App(){
   // ==================== MOBILE VIEW ====================
   const gradeColor=(g)=>({SS400:'#475569',SUS304:'#6366f1',ALU:'#0ea5e9',SGCC:'#22c55e',SPHC:'#f59e0b',SUS316:'#8b5cf6'}[g]||'#475569');
   const gradeBg=(g)=>({SS400:'#f1f5f9',SUS304:'#ede9fe',ALU:'#ecfeff',SGCC:'#f0fdf4',SPHC:'#fffbeb',SUS316:'#f5f3ff'}[g]||'#f1f5f9');
+
+// ═══════ js/modules/mobile.js ═══════
   const sizeStr2=(s)=>s.type==='PIPE'?`OD${s.width}mm × ${s.length}mm`:`${s.width}×${s.length}mm`;
   const MobileView=()=>{
     const [mp,setMp]=useState('home');const [mData,setMData]=useState(null);
@@ -1501,6 +1683,10 @@ function App(){
       allMenus.push({l:'สร้าง PR',bg:'#eff6ff',clr:'#2563eb',p:'pr',ic:'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6'});
       allMenus.push({l:'สถานะ PR',bg:'#f5f3ff',clr:'#7c3aed',p:'prStatus',ic:'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 104 0M9 5a2 2 0 004 0',bdg:prs.filter(p=>p.requestedBy===user.fullName&&p.status!=='เสร็จสิ้น'&&p.status!=='ปฏิเสธ').length});
       allMenus.push({l:'ประวัติ',bg:'#f1f5f9',clr:'#475569',p:'history',ic:'M12 20V10M18 20V4M6 20v-4'});
+      allMenus.push({l:'🛠️ ขอยืมเครื่องมือ',bg:'#fef3c7',clr:'#d97706',p:'toolBorrow',ic:'M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z'});
+      if(canManageTool){const tPend=toolLoans.filter(l=>l.status==='รออนุมัติ'||l.status==='อนุมัติ — รอรับของ').length;allMenus.push({l:'อนุมัติ+จ่าย',bg:'#e0e7ff',clr:'#4338ca',p:'toolApprove',ic:'M22 11.08V12a10 10 0 11-5.93-9.14M22 4L12 14.01 9 11.01',bdg:tPend});}
+      allMenus.push({l:'คืนเครื่องมือ',bg:'#d1fae5',clr:'#059669',p:'toolReturn',ic:'M22 11.08V12a10 10 0 11-5.93-9.14M22 4L12 14.01 9 11.01',bdg:activeToolLoans.length});
+      allMenus.push({l:'ประวัติยืม-คืน',bg:'#ede9fe',clr:'#7c3aed',p:'toolHistory',ic:'M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2M8 2h8v4H8z'});
       if(canReturnSteel)allMenus.push({l:'คืนเศษเหล็ก',bg:'#fffbeb',clr:'#d97706',p:'steelReturn',ic:'M6 6a3 3 0 110 0 3 3 0 010 0zM6 18a3 3 0 110 0 3 3 0 010 0zM20 4L8.12 15.88'});
       if(isAdmin||isStore)allMenus.push({l:'รับเข้าสต๊อก',bg:'#ecfdf5',clr:'#059669',p:'receive',ic:'M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12'});
       if(isWorker)allMenus.push({l:'ดูสต๊อก',bg:'#f8fafc',clr:'#64748b',p:'steelM',ic:'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'});
@@ -2012,8 +2198,146 @@ ${t.rejectReason?'<div><span class="label">เหตุผล:</span> <span clas
       {isAdmin&&<button onClick={resetAllData} style={{width:'100%',padding:12,border:'1.5px solid #fde68a',borderRadius:12,background:'#fffbeb',color:'#d97706',fontSize:14,fontWeight:700,fontFamily:'inherit',cursor:'pointer',marginBottom:10}}>รีเซ็ตข้อมูลทั้งหมด</button>}
       {canDesktop&&<button onClick={()=>setIsMobile(false)} style={{width:'100%',padding:12,border:'1.5px solid #e2e8f0',borderRadius:12,background:'#fff',color:'#1e293b',fontSize:14,fontWeight:700,fontFamily:'inherit',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,marginBottom:10}}>เปิดหน้า Desktop</button>}
       <button onClick={logout} style={{width:'100%',padding:12,border:'1px solid #fecaca',borderRadius:12,background:'#fef2f2',color:'#dc2626',fontSize:14,fontWeight:700,fontFamily:'inherit',cursor:'pointer'}}>ออกจากระบบ</button>
-      <div style={{textAlign:'center',fontSize:11,color:'#94a3b8',marginTop:12}}>TGT Store V9.0 — ข้อมูลเก็บใน localStorage • Login: {user.username} ({user.role})</div>
+      <div style={{textAlign:'center',fontSize:11,color:'#94a3b8',marginTop:12}}>TGT Store V9.0 — ☁️ Supabase Cloud Database • Login: {user.username} ({user.role})</div>
     </div></>;
+
+    // ===== Mobile Tool Borrow =====
+    const MToolBorrow=()=>{
+      const availTools=toolItems.filter(t=>t.status==='พร้อมใช้');
+      const [tf,setTf]=useState({toolId:'',borrowerName:user?.fullName||'',dept:user?.dept||'',purpose:'',conditionOut:'ปกติ'});
+      const myPendingM=toolLoans.filter(l=>l.borrowerName===user.fullName&&(l.status==='รออนุมัติ'||l.status==='อนุมัติ — รอรับของ'));
+      const tSubmit=()=>{if(!tf.toolId||!tf.borrowerName||!tf.purpose)return;
+        const newL={id:`LN-${String(toolLoans.length+1).padStart(3,'0')}`,toolId:tf.toolId,borrower:user.id,borrowerName:tf.borrowerName,dept:tf.dept,borrowDate:todayStr(),borrowTime:nowStr(),dueDate:todayStr(),purpose:tf.purpose,conditionOut:tf.conditionOut,status:'รออนุมัติ',returnDate:'',returnTime:'',conditionIn:'',repairNote:'',inspector:'',approvedBy:'',dispatchedBy:''};
+        setToolLoans([newL,...toolLoans]);
+        notify('ส่งคำขอยืมสำเร็จ — รอ Store อนุมัติ');setTf({toolId:'',borrowerName:user?.fullName||'',dept:user?.dept||'',purpose:'',conditionOut:'ปกติ'});
+      };
+      return<>{topBar('🛠️ ขอยืมเครื่องมือ')}<div style={{flex:1,overflowY:'auto',padding:16,paddingBottom:90}}>
+        {/* Workflow */}
+        <div style={{background:'#eff6ff',borderRadius:12,padding:12,marginBottom:14,border:'1px solid #bfdbfe'}}>
+          <div style={{fontSize:11,fontWeight:700,color:'#1e40af',marginBottom:6}}>📋 ขั้นตอนยืม</div>
+          <div style={{display:'flex',gap:4,flexWrap:'wrap',fontSize:10}}>
+            <span style={{padding:'2px 6px',background:'#fef3c7',borderRadius:6,fontWeight:700,color:'#92400e'}}>1.ขอยืม</span><span style={{color:'#94a3b8'}}>→</span>
+            <span style={{padding:'2px 6px',background:'#e0e7ff',borderRadius:6,fontWeight:700,color:'#3730a3'}}>2.อนุมัติ</span><span style={{color:'#94a3b8'}}>→</span>
+            <span style={{padding:'2px 6px',background:'#d1fae5',borderRadius:6,fontWeight:700,color:'#065f46'}}>3.จ่ายของ</span><span style={{color:'#94a3b8'}}>→</span>
+            <span style={{padding:'2px 6px',background:'#dbeafe',borderRadius:6,fontWeight:700,color:'#1e40af'}}>4.ยืมอยู่</span><span style={{color:'#94a3b8'}}>→</span>
+            <span style={{padding:'2px 6px',background:'#ede9fe',borderRadius:6,fontWeight:700,color:'#5b21b6'}}>5.คืน</span>
+          </div>
+        </div>
+        {/* Summary */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:16}}>
+          <div style={{background:'#fef3c7',borderRadius:12,padding:10,textAlign:'center'}}><div style={{fontSize:22,fontWeight:800,color:'#d97706'}}>{toolItems.length}</div><div style={{fontSize:10,color:'#92400e'}}>ทั้งหมด</div></div>
+          <div style={{background:'#d1fae5',borderRadius:12,padding:10,textAlign:'center'}}><div style={{fontSize:22,fontWeight:800,color:'#059669'}}>{availTools.length}</div><div style={{fontSize:10,color:'#065f46'}}>พร้อมใช้</div></div>
+          <div style={{background:'#dbeafe',borderRadius:12,padding:10,textAlign:'center'}}><div style={{fontSize:22,fontWeight:800,color:'#2563eb'}}>{activeToolLoans.length}</div><div style={{fontSize:10,color:'#1e40af'}}>ถูกยืม</div></div>
+        </div>
+        {/* Form */}
+        <div style={{background:'#fff',borderRadius:16,padding:16,border:'1px solid #e2e8f0',marginBottom:14}}>
+          <div style={{fontSize:14,fontWeight:700,marginBottom:12,color:'#1e293b'}}>📝 ส่งคำขอยืม</div>
+          <div style={{marginBottom:10}}><div style={{fontSize:11,fontWeight:700,color:'#64748b',marginBottom:4}}>เครื่องมือ *</div>
+            <select value={tf.toolId} onChange={e=>setTf({...tf,toolId:e.target.value})} style={{width:'100%',padding:10,border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,fontFamily:'inherit'}}><option value="">-- เลือก --</option>{availTools.map(t=><option key={t.id} value={t.id}>{t.name} ({t.serial})</option>)}</select></div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
+            <div><div style={{fontSize:11,fontWeight:700,color:'#64748b',marginBottom:4}}>ผู้ยืม</div><input value={tf.borrowerName} readOnly={!canManageTool} onChange={e=>setTf({...tf,borrowerName:e.target.value})} style={{width:'100%',padding:10,border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,fontFamily:'inherit',boxSizing:'border-box',background:canManageTool?'#fff':'#f8fafc',color:canManageTool?'#1e293b':'#64748b'}}/></div>
+            <div><div style={{fontSize:11,fontWeight:700,color:'#64748b',marginBottom:4}}>แผนก</div><input value={tf.dept} readOnly={!canManageTool} onChange={e=>setTf({...tf,dept:e.target.value})} style={{width:'100%',padding:10,border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,fontFamily:'inherit',boxSizing:'border-box',background:canManageTool?'#fff':'#f8fafc',color:canManageTool?'#1e293b':'#64748b'}}/></div>
+          </div>
+          <div style={{marginBottom:12}}><div style={{fontSize:11,fontWeight:700,color:'#64748b',marginBottom:4}}>วัตถุประสงค์ / Job *</div><input value={tf.purpose} onChange={e=>setTf({...tf,purpose:e.target.value})} placeholder="เช่น Job #2569-041" style={{width:'100%',padding:10,border:'1.5px solid #e2e8f0',borderRadius:10,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
+          <button onClick={tSubmit} disabled={!tf.toolId||!tf.borrowerName||!tf.purpose} style={{width:'100%',padding:12,border:'none',borderRadius:12,background:(!tf.toolId||!tf.borrowerName||!tf.purpose)?'#d1d5db':'#d97706',color:'#fff',fontSize:14,fontWeight:700,fontFamily:'inherit',cursor:'pointer'}}>📤 ส่งคำขอยืม (รอ Store อนุมัติ)</button>
+        </div>
+        {/* Pending requests */}
+        {myPendingM.length>0&&<div style={{background:'#fff',borderRadius:16,padding:14,border:'1px solid #e2e8f0',marginBottom:14}}>
+          <div style={{fontSize:13,fontWeight:700,marginBottom:8,color:'#d97706'}}>⏳ คำขอรออนุมัติ ({myPendingM.length})</div>
+          {myPendingM.map(l=>{const tl=toolItems.find(t=>t.id===l.toolId);const stCl=l.status==='รออนุมัติ'?{bg:'#fef3c7',clr:'#92400e'}:{bg:'#e0e7ff',clr:'#3730a3'};return<div key={l.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid #f1f5f9'}}>
+            <ToolImg src={tl?.image} size={32}/>
+            <div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:700,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{tl?.name}</div><div style={{fontSize:10,color:'#94a3b8'}}>{l.purpose} • {l.borrowDate}</div></div>
+            <span style={{fontSize:9,fontWeight:700,padding:'3px 6px',borderRadius:6,background:stCl.bg,color:stCl.clr}}>{l.status}</span>
+          </div>})}
+        </div>}
+        {/* Active loans */}
+        {myToolLoans.length>0&&<div style={{background:'#fff',borderRadius:16,padding:14,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,fontWeight:700,marginBottom:8,color:'#0369a1'}}>📋 {canManageTool?'กำลังยืมอยู่':'เครื่องมือที่ฉันยืม'} ({myToolLoans.length})</div>
+          {myToolLoans.map(l=>{const tl=toolItems.find(t=>t.id===l.toolId);return<div key={l.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid #f1f5f9'}}>
+            <ToolImg src={tl?.image} size={32}/>
+            <div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:700,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{tl?.name}</div><div style={{fontSize:10,color:'#94a3b8'}}>{l.borrowerName} • {l.borrowDate}</div></div>
+            <div style={{fontSize:10,fontWeight:700,color:l.dueDate<todayStr()?'#dc2626':'#64748b',textAlign:'right'}}>{l.dueDate}</div>
+          </div>})}
+        </div>}
+      </div></>;
+    };
+
+    // ===== Mobile Tool Approve & Dispatch (Store/Admin) =====
+    const MToolApprove=()=>{
+      const pendingM=toolLoans.filter(l=>l.status==='รออนุมัติ');
+      const approvedM=toolLoans.filter(l=>l.status==='อนุมัติ — รอรับของ');
+      const doApproveM=(id)=>{setToolLoans(toolLoans.map(l=>l.id===id?{...l,status:'อนุมัติ — รอรับของ',approvedBy:user.fullName}:l));notify('อนุมัติสำเร็จ')};
+      const doRejectM=(id)=>{setToolLoans(toolLoans.map(l=>l.id===id?{...l,status:'ไม่อนุมัติ'}:l));notify('ปฏิเสธแล้ว','err')};
+      const doDispatchM=(id)=>{const ln=toolLoans.find(l=>l.id===id);if(!ln)return;setToolLoans(toolLoans.map(l=>l.id===id?{...l,status:'ยืมอยู่',dispatchedBy:user.fullName,conditionOut:'ปกติ'}:l));setToolItems(toolItems.map(t=>t.id===ln.toolId?{...t,status:'ถูกยืม'}:t));notify('จ่ายเครื่องมือออกสำเร็จ')};
+      return<>{topBar('✅ อนุมัติ + จ่ายเครื่องมือ')}<div style={{flex:1,overflowY:'auto',padding:16,paddingBottom:90}}>
+        {/* Pending */}
+        <div style={{fontSize:13,fontWeight:700,color:'#d97706',marginBottom:8}}>⏳ รออนุมัติ ({pendingM.length})</div>
+        {pendingM.length?pendingM.map(l=>{const tl=toolItems.find(t=>t.id===l.toolId);return<div key={l.id} style={{background:'#fff',borderRadius:14,padding:14,marginBottom:10,border:'1.5px solid #fde68a'}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}><ToolImg src={tl?.image} size={40}/><div style={{flex:1}}><div style={{fontWeight:700,fontSize:14}}>{tl?.name}</div><div style={{fontSize:11,color:'#64748b'}}>👤 {l.borrowerName} — {l.dept}</div><div style={{fontSize:10,color:'#94a3b8'}}>📋 {l.purpose} • {l.borrowDate}</div></div></div>
+          <div style={{display:'flex',gap:8}}><button onClick={()=>doRejectM(l.id)} style={{flex:1,padding:10,border:'1px solid #fecaca',borderRadius:10,background:'#fff',color:'#dc2626',fontSize:12,fontWeight:700,fontFamily:'inherit',cursor:'pointer'}}>❌ ไม่อนุมัติ</button><button onClick={()=>doApproveM(l.id)} style={{flex:1,padding:10,border:'none',borderRadius:10,background:'#059669',color:'#fff',fontSize:12,fontWeight:700,fontFamily:'inherit',cursor:'pointer'}}>✅ อนุมัติ</button></div>
+        </div>}):<div style={{textAlign:'center',color:'#94a3b8',padding:30,fontSize:13,border:'2px dashed #e2e8f0',borderRadius:12,marginBottom:14}}>ไม่มีรายการรออนุมัติ</div>}
+        {/* Approved - wait dispatch */}
+        <div style={{fontSize:13,fontWeight:700,color:'#4338ca',marginBottom:8,marginTop:16}}>📦 อนุมัติแล้ว — รอจ่ายของ ({approvedM.length})</div>
+        {approvedM.length?approvedM.map(l=>{const tl=toolItems.find(t=>t.id===l.toolId);return<div key={l.id} style={{background:'#fff',borderRadius:14,padding:14,marginBottom:10,border:'1.5px solid #c7d2fe'}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}><ToolImg src={tl?.image} size={40}/><div style={{flex:1}}><div style={{fontWeight:700,fontSize:14}}>{tl?.name}</div><div style={{fontSize:11,color:'#64748b'}}>👤 {l.borrowerName} — {l.dept}</div><div style={{fontSize:10,color:'#059669'}}>✅ อนุมัติโดย {l.approvedBy}</div></div></div>
+          <button onClick={()=>doDispatchM(l.id)} style={{width:'100%',padding:10,border:'none',borderRadius:10,background:'#4338ca',color:'#fff',fontSize:13,fontWeight:700,fontFamily:'inherit',cursor:'pointer'}}>📦 จ่ายเครื่องมือออก</button>
+        </div>}):<div style={{textAlign:'center',color:'#94a3b8',padding:30,fontSize:13,border:'2px dashed #e2e8f0',borderRadius:12}}>ไม่มีรายการรอจ่าย</div>}
+      </div></>;
+    };
+
+    // ===== Mobile Tool Return =====
+    const MToolReturn=()=>{
+      const [selLn,setSelLn]=useState('');const [condR,setCondR]=useState('ปกติ');const [repN,setRepN]=useState('');
+      const returnableM=canManageTool?activeToolLoans:activeToolLoans.filter(l=>l.borrowerName===user.fullName);
+      const ln=toolLoans.find(l=>l.id===selLn);
+      const needsR=condR==='ต้องซ่อมแซม'||condR==='ชำรุด/ใช้งานไม่ได้'||condR==='สูญหาย';
+      const doReturn=()=>{if(!ln)return;
+        const newSt=needsR?'คืนแล้ว — ส่งซ่อม':'คืนแล้ว';
+        setToolLoans(toolLoans.map(l=>l.id===selLn?{...l,status:newSt,returnDate:todayStr(),returnTime:nowStr(),conditionIn:condR,repairNote:repN,inspector:user?.fullName||''}:l));
+        setToolItems(toolItems.map(t=>t.id===ln.toolId?{...t,status:needsR?'ซ่อมแซม':'พร้อมใช้',condition:condR,note:needsR?repN:t.note}:t));
+        notify(needsR?'คืนแล้ว — ส่งซ่อม':'คืนเครื่องมือสำเร็จ');
+        setSelLn('');setCondR('ปกติ');setRepN('');
+      };
+      return<>{topBar(canManageTool?'✅ คืนเครื่องมือ + ตรวจสภาพ':'✅ คืนเครื่องมือของฉัน')}<div style={{flex:1,overflowY:'auto',padding:16,paddingBottom:90}}>
+        <div style={{background:'#fff',borderRadius:16,padding:16,border:'1px solid #e2e8f0',marginBottom:14}}>
+          <div style={{fontSize:11,fontWeight:700,color:'#64748b',marginBottom:6}}>เลือกรายการยืมที่จะคืน</div>
+          {returnableM.length?returnableM.map(l=>{const tl=toolItems.find(t=>t.id===l.toolId);const isSel=selLn===l.id;return<div key={l.id} onClick={()=>{setSelLn(isSel?'':l.id);setCondR('ปกติ');setRepN('')}} style={{display:'flex',alignItems:'center',gap:10,padding:12,marginBottom:8,borderRadius:12,border:`2px solid ${isSel?'#059669':'#e2e8f0'}`,background:isSel?'#ecfdf5':'#fff',cursor:'pointer'}}>
+            <div style={{width:20,height:20,borderRadius:10,border:`2px solid ${isSel?'#059669':'#cbd5e1'}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{isSel&&<div style={{width:12,height:12,borderRadius:6,background:'#059669'}}/>}</div>
+            <ToolImg src={tl?.image} size={32}/>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:13,fontWeight:700,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{tl?.name||l.toolId} <span style={{fontWeight:400,color:'#94a3b8'}}>({tl?.serial})</span></div>
+              <div style={{fontSize:11,color:'#475569'}}>👤 {l.borrowerName} — {l.dept}</div>
+              <div style={{fontSize:10,color:'#94a3b8'}}>📅 ยืม: {l.borrowDate} | กำหนดคืน: <span style={{color:l.dueDate<todayStr()?'#dc2626':'#64748b',fontWeight:l.dueDate<todayStr()?700:400}}>{l.dueDate}</span></div>
+              <div style={{fontSize:10,color:'#94a3b8'}}>📋 {l.purpose}</div>
+            </div>
+          </div>}):<div style={{textAlign:'center',color:'#94a3b8',padding:20,fontSize:13}}>{canManageTool?'ไม่มีรายการยืมที่ค้างอยู่':'คุณไม่มีเครื่องมือที่ต้องคืน'}</div>}
+          {selLn&&<><div style={{fontSize:11,fontWeight:700,color:'#64748b',marginBottom:6,marginTop:12}}>🔍 ตรวจสภาพตอนคืน</div>
+          {TOOL_CONDITIONS.map(c=><div key={c} onClick={()=>setCondR(c)} style={{display:'flex',alignItems:'center',gap:8,padding:'10px 12px',marginBottom:6,borderRadius:10,border:`2px solid ${condR===c?'#059669':'#e2e8f0'}`,background:condR===c?'#ecfdf5':'#fff',cursor:'pointer'}}><div style={{width:18,height:18,borderRadius:9,border:`2px solid ${condR===c?'#059669':'#cbd5e1'}`,display:'flex',alignItems:'center',justifyContent:'center'}}>{condR===c&&<div style={{width:10,height:10,borderRadius:5,background:'#059669'}}/>}</div><span style={{fontSize:13,fontWeight:condR===c?700:500}}>{c}</span></div>)}
+          {needsR&&<div style={{background:'#fff7ed',border:'1.5px solid #fed7aa',borderRadius:12,padding:12,marginTop:8,marginBottom:8}}><div style={{fontSize:12,fontWeight:700,color:'#c2410c',marginBottom:6}}>🔩 รายละเอียดความเสียหาย</div><textarea value={repN} onChange={e=>setRepN(e.target.value)} rows={3} placeholder="เช่น ใบเลื่อยบิ่น ต้องเปลี่ยนใบใหม่" style={{width:'100%',padding:10,border:'1px solid #fed7aa',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>}
+          <button onClick={doReturn} disabled={!selLn||(needsR&&!repN)} style={{width:'100%',padding:12,border:'none',borderRadius:12,background:(!selLn||(needsR&&!repN))?'#d1d5db':'#059669',color:'#fff',fontSize:14,fontWeight:700,fontFamily:'inherit',cursor:'pointer',marginTop:8}}>✅ บันทึกการคืน</button>
+          </>}
+        </div>
+      </div></>;
+    };
+
+    // ===== Mobile Tool History =====
+    const MToolHistory=()=>{
+      const visibleM=canManageTool?toolLoans:toolLoans.filter(l=>l.borrowerName===user.fullName);
+      return<>{topBar(canManageTool?'📖 ประวัติยืม-คืน (ทั้งหมด)':'📖 ประวัติยืม-คืนของฉัน')}<div style={{flex:1,overflowY:'auto',padding:16,paddingBottom:90}}>
+        {visibleM.length?visibleM.slice(0,30).map(l=>{const tl=toolItems.find(t=>t.id===l.toolId);const isActive=l.status==='ยืมอยู่';const isRepair=l.status.includes('ซ่อม');
+          return<div key={l.id} style={{background:'#fff',borderRadius:14,padding:14,marginBottom:10,border:`1.5px solid ${isActive?'#bfdbfe':isRepair?'#fed7aa':'#d1fae5'}`}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+              <div style={{display:'flex',alignItems:'center',gap:8}}><ToolImg src={tl?.image} size={32}/><div><div style={{fontSize:14,fontWeight:700}}>{tl?.name||l.toolId}</div><div style={{fontSize:10,color:'#94a3b8'}}>{tl?.serial} • {l.id}</div></div></div>
+              <span style={{fontSize:10,fontWeight:700,padding:'3px 8px',borderRadius:6,background:isActive?'#dbeafe':isRepair?'#ffedd5':'#dcfce7',color:isActive?'#1d4ed8':isRepair?'#c2410c':'#166534'}}>{l.status}</span>
+            </div>
+            <div style={{fontSize:12,color:'#475569'}}>👤 {l.borrowerName} — {l.dept}</div>
+            <div style={{fontSize:11,color:'#94a3b8',marginTop:2}}>📅 ยืม: {l.borrowDate} {l.borrowTime} | คืน: {l.dueDate}</div>
+            <div style={{fontSize:11,color:'#64748b',marginTop:2}}>📋 {l.purpose}</div>
+            {l.returnDate&&<div style={{fontSize:11,color:'#059669',marginTop:4,background:'#f0fdf4',padding:'4px 8px',borderRadius:6}}>✅ คืนแล้ว: {l.returnDate} {l.returnTime} | สภาพ: {l.conditionIn}</div>}
+            {l.repairNote&&<div style={{fontSize:11,color:'#c2410c',marginTop:4,background:'#fff7ed',padding:'4px 8px',borderRadius:6}}>🔩 {l.repairNote}</div>}
+          </div>}):<div style={{textAlign:'center',color:'#94a3b8',padding:40,fontSize:14}}>ยังไม่มีประวัติยืม-คืน</div>}
+      </div></>;
+    };
 
     return<div style={ms}>
       {mp==='home'&&<MHome/>}
@@ -2029,9 +2353,15 @@ ${t.rejectReason?'<div><span class="label">เหตุผล:</span> <span clas
       {mp==='prStatus'&&<MPRStatus/>}
       {mp==='steelReturn'&&<MSteelReturn/>}
       {mp==='receive'&&<MReceive/>}
+      {mp==='toolBorrow'&&<MToolBorrow/>}
+      {mp==='toolApprove'&&<MToolApprove/>}
+      {mp==='toolReturn'&&<MToolReturn/>}
+      {mp==='toolHistory'&&<MToolHistory/>}
     </div>;
   };
 
+
+// ═══════ js/modules/users.js ═══════
   // ==================== USER MANAGEMENT ====================
   const ROLES=['Admin','Store','MD','GM','FM','พนักงาน','ออกแบบ'];
   const UserMgmt=()=>{
@@ -2259,7 +2589,7 @@ ${t.rejectReason?'<div><span class="label">เหตุผล:</span> <span clas
 
   // 4. กำหนดสิทธิ์ (Permissions Matrix)
   const AccessPerms=()=>{
-    const [selRole,setSelRole]=useState(roles[0]?.id||'');
+    const selRole=permSelRole;const setSelRole=setPermSelRole;
     const togglePerm=(mod,p)=>{
       setPerms(prev=>{const cur={...prev};const rp={...(cur[selRole]||{})};const mp={...(rp[mod]||{v:0,c:0,e:0,d:0})};mp[p]=mp[p]?0:1;rp[mod]=mp;cur[selRole]=rp;return cur});
     };
@@ -2470,6 +2800,181 @@ ${t.rejectReason?'<div><span class="label">เหตุผล:</span> <span clas
   };
 
   // ===== Access denied component =====
+
+// ═══════ js/modules/tools.js ═══════
+  // ==================== TOOL LENDING SYSTEM ====================
+  const activeToolLoans=toolLoans.filter(l=>l.status==='ยืมอยู่');
+  const myToolLoans=canManageTool?activeToolLoans:activeToolLoans.filter(l=>l.borrowerName===user.fullName);
+  const toolStColors={'พร้อมใช้':'bg-emerald-50 text-emerald-700','ถูกยืม':'bg-sky-50 text-sky-700','ซ่อมแซม':'bg-orange-50 text-orange-700','ปลดระวาง':'bg-slate-100 text-slate-500'};
+  const ToolImg=({src,size=40})=><img src={src||'https://placehold.co/80x80/94a3b8/fff?text=Tool'} style={{width:size,height:size,objectFit:'cover',borderRadius:8,border:'1px solid #e2e8f0'}} onError={e=>{e.target.src='https://placehold.co/80x80/94a3b8/fff?text=Tool'}}/>;
+
+  const ToolDashboard=()=>{
+    const avail=toolItems.filter(t=>t.status==='พร้อมใช้').length;
+    const borrowed=toolItems.filter(t=>t.status==='ถูกยืม').length;
+    const repairing=toolItems.filter(t=>t.status==='ซ่อมแซม').length;
+    const totalVal=toolItems.reduce((s,t)=>s+t.price,0);
+    const [showAddTool,setShowAddTool]=useState(false);const [editTool,setEditTool]=useState(null);const [delTool,setDelTool]=useState(null);
+    const blankTool={id:`TL-${String(toolItems.length+1).padStart(3,'0')}`,name:'',serial:'',category:'เครื่องมือทั่วไป',condition:'ปกติ',location:'คลังเครื่องมือ',price:0,image:'',status:'พร้อมใช้',note:''};
+    const [tf,setTf]=useState(blankTool);
+    const openAddTool=()=>{setEditTool(null);setTf({...blankTool,id:`TL-${String(toolItems.length+1).padStart(3,'0')}`});setShowAddTool(true)};
+    const openEditTool=t=>{setEditTool(t);setTf({...t});setShowAddTool(true)};
+    const saveTool=e=>{e.preventDefault();if(editTool){setToolItems(toolItems.map(t=>t.id===editTool.id?tf:t));notify('แก้ไขเครื่องมือสำเร็จ')}else{setToolItems([...toolItems,tf]);notify('เพิ่มเครื่องมือสำเร็จ')}setShowAddTool(false)};
+    const confirmDel=()=>{if(!delTool)return;setToolItems(toolItems.filter(t=>t.id!==delTool.id));notify('ลบเครื่องมือสำเร็จ');setDelTool(null)};
+
+    return(<Wrap title="ระบบยืม-คืนเครื่องมือช่าง" icon={Ic.wrench}>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {[{t:'เครื่องมือทั้งหมด',n:toolItems.length,c:'text-amber-600 bg-amber-50',sub:'฿'+totalVal.toLocaleString()},{t:'พร้อมใช้งาน',n:avail,c:'text-emerald-600 bg-emerald-50',sub:'ในคลัง'},{t:'ถูกยืมอยู่',n:borrowed,c:'text-sky-600 bg-sky-50',sub:activeToolLoans.length+' รายการ'},{t:'อยู่ระหว่างซ่อม',n:repairing,c:'text-orange-600 bg-orange-50',sub:'รอซ่อมแซม'}].map((c,i)=><div key={i} className="bg-white rounded-2xl border p-4 hover:shadow-md transition-shadow"><div className={`inline-flex p-2 rounded-xl mb-2 ${c.c}`}><span className="text-2xl font-black">{c.n}</span></div><div className="text-sm font-bold text-slate-700">{c.t}</div><div className="text-[11px] text-slate-400">{c.sub}</div></div>)}
+      </div>
+      {myToolLoans.length>0&&<div className="mb-6"><h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2"><I d={Ic.clock} size={18} cls="text-sky-500"/>{canManageTool?'รายการยืมปัจจุบัน':'รายการยืมของฉัน'} ({myToolLoans.length})</h3>
+      <div className="overflow-x-auto border rounded-xl"><table className="w-full text-sm"><thead className="bg-sky-50"><tr><th className="p-3 text-left">เครื่องมือ</th><th className="p-3 text-left">ผู้ยืม</th><th className="p-3 text-center">วันยืม</th><th className="p-3 text-center">กำหนดคืน</th><th className="p-3 text-center">สถานะ</th></tr></thead>
+      <tbody className="divide-y">{myToolLoans.map(l=>{const tl=toolItems.find(t=>t.id===l.toolId);return<tr key={l.id} className="hover:bg-sky-50/30"><td className="p-3"><div className="flex items-center gap-2"><ToolImg src={tl?.image} size={32}/><div><div className="font-bold">{tl?.name||l.toolId}</div><div className="text-[10px] text-slate-400">{tl?.serial}</div></div></div></td><td className="p-3"><div className="font-bold text-xs">{l.borrowerName}</div><div className="text-[10px] text-slate-400">{l.dept}</div></td><td className="p-3 text-center text-xs">{l.borrowDate}</td><td className="p-3 text-center text-xs"><span className={l.dueDate<todayStr()?'text-rose-600 font-bold':''}>{l.dueDate}</span></td><td className="p-3 text-center"><span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700">ยืมอยู่</span></td></tr>})}</tbody></table></div></div>}
+      {/* Tool inventory with CRUD */}
+      <div className="flex items-center justify-between mb-3"><h3 className="font-bold text-slate-800 flex items-center gap-2"><I d={Ic.pkg} size={18} cls="text-amber-500"/>ทะเบียนเครื่องมือ ({toolItems.length} รายการ)</h3>
+        {canManageTool&&<button onClick={openAddTool} className="bg-amber-500 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-amber-600 flex items-center gap-1"><I d={Ic.plus} size={15}/>เพิ่มเครื่องมือ</button>}
+      </div>
+      <div className="overflow-x-auto border rounded-xl"><table className="w-full text-sm"><thead className="bg-slate-50"><tr><th className="p-3 text-left w-10"></th><th className="p-3 text-left">ชื่อเครื่องมือ</th><th className="p-3 text-left">Serial</th><th className="p-3 text-left">ประเภท</th><th className="p-3 text-center">สภาพ</th><th className="p-3 text-center">สถานะ</th><th className="p-3 text-right">มูลค่า</th>{canManageTool&&<th className="p-3 text-center w-24">จัดการ</th>}</tr></thead>
+      <tbody className="divide-y">{toolItems.map(t=><tr key={t.id} className="hover:bg-amber-50/20"><td className="p-3 text-center"><ToolImg src={t.image} size={40}/></td><td className="p-3"><div className="font-bold text-slate-800">{t.name}</div>{t.note&&<div className="text-[10px] text-amber-600">{t.note}</div>}</td><td className="p-3 font-mono text-xs">{t.serial}</td><td className="p-3 text-xs">{t.category}</td><td className="p-3 text-center"><span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${TOOL_COND_COLORS[t.condition]||'bg-slate-100 text-slate-500'}`}>{t.condition}</span></td><td className="p-3 text-center"><span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${toolStColors[t.status]||'bg-slate-100 text-slate-500'}`}>{t.status}</span></td><td className="p-3 text-right font-bold">฿{t.price.toLocaleString()}</td>{canManageTool&&<td className="p-3 text-center"><div className="flex gap-1 justify-center"><button onClick={()=>openEditTool(t)} className="p-1.5 hover:bg-sky-100 rounded-lg text-slate-400 hover:text-sky-600"><I d={Ic.edit} size={14}/></button><button onClick={()=>setDelTool(t)} className="p-1.5 hover:bg-rose-100 rounded-lg text-slate-400 hover:text-rose-600"><I d={Ic.trash} size={14}/></button></div></td>}</tr>)}</tbody></table></div>
+      {/* Add/Edit Modal */}
+      {showAddTool&&<div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"><div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg anim-zoom max-h-[90vh] overflow-y-auto sb">
+        <div className="border-b p-5 flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-2xl"><h3 className="font-bold text-lg">{editTool?'✏️ แก้ไขเครื่องมือ':'➕ เพิ่มเครื่องมือใหม่'}</h3><button onClick={()=>setShowAddTool(false)} className="p-2 hover:bg-slate-100 rounded-lg"><I d={Ic.x} size={18} cls="text-slate-400"/></button></div>
+        <form onSubmit={saveTool} className="p-5 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2"><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">ชื่อเครื่องมือ *</label><input required value={tf.name} onChange={e=>setTf({...tf,name:e.target.value})} placeholder="เช่น ตลับเมตร 5 เมตร" className="w-full border rounded-xl p-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"/></div>
+            <div><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Serial / รหัส *</label><input required value={tf.serial} onChange={e=>setTf({...tf,serial:e.target.value})} placeholder="TAP-004" className="w-full border rounded-xl p-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"/></div>
+            <div><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">ประเภท</label><select value={tf.category} onChange={e=>setTf({...tf,category:e.target.value})} className="w-full border rounded-xl p-2.5 text-sm outline-none"><option>เครื่องมือทั่วไป</option><option>เครื่องมือไฟฟ้า</option><option>เครื่องมือวัด</option><option>เครื่องมือตัด</option><option>เครื่องมือเชื่อม</option></select></div>
+            <div><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">มูลค่า (บาท)</label><input type="number" value={tf.price} onChange={e=>setTf({...tf,price:Number(e.target.value)})} className="w-full border rounded-xl p-2.5 text-sm outline-none"/></div>
+            <div><ImgUpload value={tf.image} onChange={v=>setTf({...tf,image:v})} label="รูปภาพเครื่องมือ"/></div>
+            <div className="col-span-2"><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">หมายเหตุ / รุ่น</label><input value={tf.note} onChange={e=>setTf({...tf,note:e.target.value})} placeholder="เช่น Makita M9510B" className="w-full border rounded-xl p-2.5 text-sm outline-none"/></div>
+          </div>
+          <div className="flex justify-end gap-3 pt-2 border-t"><button type="button" onClick={()=>setShowAddTool(false)} className="px-5 py-2 text-sm font-bold text-slate-600 border rounded-xl">ยกเลิก</button><button type="submit" className="px-5 py-2 text-sm font-bold text-white bg-amber-500 rounded-xl hover:bg-amber-600 flex items-center gap-1"><I d={Ic.save} size={16}/>บันทึก</button></div>
+        </form>
+      </div></div>}
+      <Confirm show={!!delTool} title="ยืนยันการลบ" msg={`ลบเครื่องมือ "${delTool?.name}" (${delTool?.serial})?`} onOk={confirmDel} onNo={()=>setDelTool(null)} danger/>
+    </Wrap>);
+  };
+
+  const ToolBorrow=()=>{
+    const availTools=toolItems.filter(t=>t.status==='พร้อมใช้');
+    const [f,setF]=useState({toolId:'',borrowerName:user.fullName,dept:user.dept||'',purpose:'',dueDate:'',conditionOut:'ปกติ'});
+    const myPending=toolLoans.filter(l=>l.borrowerName===user.fullName&&(l.status==='รออนุมัติ'||l.status==='อนุมัติ — รอรับของ'));
+    const submit=e=>{e.preventDefault();
+      const newLoan={id:`LN-${String(toolLoans.length+1).padStart(3,'0')}`,toolId:f.toolId,borrower:user.id,borrowerName:f.borrowerName,dept:f.dept,borrowDate:todayStr(),borrowTime:nowStr(),dueDate:f.dueDate||todayStr(),purpose:f.purpose,conditionOut:f.conditionOut,status:'รออนุมัติ',returnDate:'',returnTime:'',conditionIn:'',repairNote:'',inspector:'',approvedBy:'',dispatchedBy:''};
+      setToolLoans([newLoan,...toolLoans]);
+      notify('ส่งคำขอยืมสำเร็จ — รอ Store อนุมัติ');
+      setF({toolId:'',borrowerName:user.fullName,dept:user.dept||'',purpose:'',dueDate:'',conditionOut:'ปกติ'});
+    };
+    return(<Wrap title="ขอยืมเครื่องมือ" icon={Ic.edit}>
+      <form onSubmit={submit} className="max-w-2xl space-y-4">
+        {/* Workflow info */}
+        <div className="bg-sky-50 border border-sky-200 rounded-xl p-4 text-xs text-sky-800">
+          <div className="font-bold text-sm mb-2">📋 ขั้นตอนการยืมเครื่องมือ</div>
+          <div className="flex items-center gap-2 flex-wrap"><span className="px-2 py-1 bg-amber-100 text-amber-800 rounded-lg font-bold">1. ขอยืม</span><span className="text-slate-400">→</span><span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-lg font-bold">2. Store อนุมัติ</span><span className="text-slate-400">→</span><span className="px-2 py-1 bg-emerald-100 text-emerald-800 rounded-lg font-bold">3. จ่ายของออก</span><span className="text-slate-400">→</span><span className="px-2 py-1 bg-sky-100 text-sky-800 rounded-lg font-bold">4. ยืมอยู่</span><span className="text-slate-400">→</span><span className="px-2 py-1 bg-violet-100 text-violet-800 rounded-lg font-bold">5. คืน+ตรวจ</span></div>
+        </div>
+        <div><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">เครื่องมือที่ต้องการยืม *</label>
+          {availTools.length?<select required value={f.toolId} onChange={e=>setF({...f,toolId:e.target.value})} className="w-full border-2 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-amber-400"><option value="">-- เลือกเครื่องมือ --</option>{availTools.map(t=><option key={t.id} value={t.id}>{t.name} ({t.serial}) — ฿{t.price.toLocaleString()}</option>)}</select>:<div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">ไม่มีเครื่องมือพร้อมใช้งาน</div>}
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">ผู้ยืม</label><input value={f.borrowerName} readOnly={!canManageTool} onChange={e=>setF({...f,borrowerName:e.target.value})} className={`w-full border-2 rounded-xl p-3 text-sm outline-none ${canManageTool?'focus:ring-2 focus:ring-amber-400':'bg-slate-50 text-slate-600'}`}/></div>
+          <div><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">แผนก</label><input value={f.dept} readOnly={!canManageTool} onChange={e=>setF({...f,dept:e.target.value})} className={`w-full border-2 rounded-xl p-3 text-sm outline-none ${canManageTool?'':'bg-slate-50 text-slate-600'}`}/></div>
+        </div>
+        {canManageTool&&<div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700"><strong>💡 Store/ผู้บริหาร:</strong> เลือกยืมแทน: {accounts.filter(a=>a.role==='พนักงาน'||a.role==='ออกแบบ').map(a=><span key={a.id} onClick={()=>setF({...f,borrowerName:a.fullName,dept:a.dept})} className="underline cursor-pointer mx-1 text-amber-800 font-bold">{a.fullName}</span>)}</div>}
+        <div><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">วัตถุประสงค์ / Job *</label><input required value={f.purpose} onChange={e=>setF({...f,purpose:e.target.value})} placeholder="เช่น งาน Job #2569-041" className="w-full border-2 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-amber-400"/></div>
+        <div><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">กำหนดคืน</label><input type="date" value={f.dueDate} onChange={e=>setF({...f,dueDate:e.target.value?new Date(e.target.value).toLocaleDateString('th-TH'):''})} className="w-full border-2 rounded-xl p-3 text-sm outline-none"/></div>
+        <button type="submit" disabled={!availTools.length||!f.toolId} className="w-full bg-amber-600 text-white py-3 rounded-xl font-bold hover:bg-amber-700 disabled:opacity-50 flex items-center justify-center gap-2"><I d={Ic.save} size={18}/>ส่งคำขอยืมเครื่องมือ</button>
+      </form>
+      {/* My pending requests */}
+      {myPending.length>0&&<div className="mt-6 border-t pt-4"><h3 className="font-bold text-slate-700 mb-3 text-sm">📋 คำขอยืมของฉัน ({myPending.length})</h3>
+        {myPending.map(l=>{const tl=toolItems.find(t=>t.id===l.toolId);const stCl=l.status==='รออนุมัติ'?'bg-amber-50 text-amber-700 border-amber-200':'bg-indigo-50 text-indigo-700 border-indigo-200';return<div key={l.id} className="flex items-center gap-3 p-3 border rounded-xl mb-2"><ToolImg src={tl?.image} size={36}/><div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{tl?.name}</div><div className="text-[10px] text-slate-400">{l.purpose} • {l.borrowDate}</div></div><span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${stCl}`}>{l.status}</span></div>})}
+      </div>}
+    </Wrap>);
+  };
+
+  // ===== Tool Approve & Dispatch (Store/Admin only) =====
+  const ToolApprove=()=>{
+    const pendingLoans=toolLoans.filter(l=>l.status==='รออนุมัติ');
+    const approvedLoans=toolLoans.filter(l=>l.status==='อนุมัติ — รอรับของ');
+    const doApprove=(id)=>{setToolLoans(toolLoans.map(l=>l.id===id?{...l,status:'อนุมัติ — รอรับของ',approvedBy:user.fullName}:l));notify('อนุมัติคำขอยืมสำเร็จ')};
+    const doReject=(id)=>{setToolLoans(toolLoans.map(l=>l.id===id?{...l,status:'ไม่อนุมัติ'}:l));notify('ปฏิเสธคำขอยืม','err')};
+    const doDispatch=(id)=>{const ln=toolLoans.find(l=>l.id===id);if(!ln)return;setToolLoans(toolLoans.map(l=>l.id===id?{...l,status:'ยืมอยู่',dispatchedBy:user.fullName,conditionOut:'ปกติ'}:l));setToolItems(toolItems.map(t=>t.id===ln.toolId?{...t,status:'ถูกยืม'}:t));notify('จ่ายเครื่องมือออกสำเร็จ — สถานะเปลี่ยนเป็น "ยืมอยู่"')};
+    const loanCard=(l,actions)=>{const tl=toolItems.find(t=>t.id===l.toolId);return<div key={l.id} className="border rounded-xl p-4 mb-3 hover:shadow-md transition-shadow">
+      <div className="flex items-start gap-3"><ToolImg src={tl?.image} size={48}/>
+        <div className="flex-1 min-w-0"><div className="font-bold text-slate-800">{tl?.name||l.toolId} <span className="text-slate-400 font-normal text-xs">({tl?.serial})</span></div>
+          <div className="text-xs text-slate-600 mt-1">👤 ผู้ขอ: <strong>{l.borrowerName}</strong> — {l.dept}</div>
+          <div className="text-[10px] text-slate-400">📅 วันขอ: {l.borrowDate} {l.borrowTime} | กำหนดคืน: {l.dueDate}</div>
+          <div className="text-[10px] text-slate-400">📋 {l.purpose}</div>
+          {l.approvedBy&&<div className="text-[10px] text-emerald-600 mt-1">✅ อนุมัติโดย: {l.approvedBy}</div>}
+        </div>
+      </div>
+      <div className="flex gap-2 mt-3 justify-end">{actions}</div>
+    </div>};
+    return(<Wrap title="อนุมัติ + จ่ายเครื่องมือออก" icon={Ic.check}>
+      {/* Pending approval */}
+      <div className="mb-6"><h3 className="font-bold text-amber-800 mb-3 flex items-center gap-2">⏳ รออนุมัติ ({pendingLoans.length})</h3>
+        {pendingLoans.length?pendingLoans.map(l=>loanCard(l,<>
+          <button onClick={()=>doReject(l.id)} className="px-4 py-2 text-xs font-bold text-rose-600 border border-rose-200 rounded-xl hover:bg-rose-50">❌ ไม่อนุมัติ</button>
+          <button onClick={()=>doApprove(l.id)} className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700">✅ อนุมัติ</button>
+        </>)):<div className="text-center text-slate-400 text-sm p-6 border-2 border-dashed rounded-xl">ไม่มีรายการรออนุมัติ</div>}
+      </div>
+      {/* Approved — waiting dispatch */}
+      <div><h3 className="font-bold text-indigo-800 mb-3 flex items-center gap-2">📦 อนุมัติแล้ว — รอจ่ายของออก ({approvedLoans.length})</h3>
+        {approvedLoans.length?approvedLoans.map(l=>loanCard(l,<>
+          <button onClick={()=>doDispatch(l.id)} className="px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 flex items-center gap-1">📦 จ่ายเครื่องมือออก</button>
+        </>)):<div className="text-center text-slate-400 text-sm p-6 border-2 border-dashed rounded-xl">ไม่มีรายการรอจ่ายของ</div>}
+      </div>
+    </Wrap>);
+  };
+
+  const ToolReturn=()=>{
+    const [selLoan,setSelLoan]=useState('');
+    const [condIn,setCondIn]=useState('ปกติ');
+    const [repairNote,setRepairNote]=useState('');
+    const returnableLoans=canManageTool?activeToolLoans:activeToolLoans.filter(l=>l.borrowerName===user.fullName);
+    const loan=toolLoans.find(l=>l.id===selLoan);
+    const needsRepair=condIn==='ต้องซ่อมแซม'||condIn==='ชำรุด/ใช้งานไม่ได้'||condIn==='สูญหาย';
+    const submit=e=>{e.preventDefault();if(!loan)return;
+      const newSt=needsRepair?'คืนแล้ว — ส่งซ่อม':'คืนแล้ว';
+      setToolLoans(toolLoans.map(l=>l.id===selLoan?{...l,status:newSt,returnDate:todayStr(),returnTime:nowStr(),conditionIn:condIn,repairNote,inspector:user?.fullName||''}:l));
+      const toolNewSt=needsRepair?'ซ่อมแซม':'พร้อมใช้';
+      setToolItems(toolItems.map(t=>t.id===loan.toolId?{...t,status:toolNewSt,condition:condIn,note:needsRepair?repairNote:t.note}:t));
+      notify(needsRepair?'คืนเครื่องมือสำเร็จ — ส่งซ่อม':'คืนเครื่องมือสำเร็จ');
+      setSelLoan('');setCondIn('ปกติ');setRepairNote('');
+    };
+    return(<Wrap title={canManageTool?"บันทึกการคืน + ตรวจสภาพ (ทุกคน)":"คืนเครื่องมือของฉัน"} icon={Ic.check}>
+      <form onSubmit={submit} className="max-w-2xl space-y-4">
+        <div><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">เลือกรายการที่คืน *</label>
+          <div className="space-y-2 mt-2">{returnableLoans.length?returnableLoans.map(l=>{const tl=toolItems.find(t=>t.id===l.toolId);const isSel=selLoan===l.id;return<div key={l.id} onClick={()=>{setSelLoan(isSel?'':l.id);setCondIn('ปกติ');setRepairNote('')}} className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${isSel?'border-emerald-400 bg-emerald-50 shadow-sm':'border-slate-200 hover:border-emerald-300 hover:bg-slate-50'}`}>
+            <input type="radio" name="toolReturn" checked={isSel} readOnly className="accent-emerald-600 w-4 h-4 shrink-0"/>
+            <ToolImg src={tl?.image} size={36}/>
+            <div className="flex-1 min-w-0">
+              <div className="font-bold text-sm text-slate-800">{tl?.name||l.toolId} <span className="text-slate-400 font-normal text-xs">({tl?.serial})</span></div>
+              <div className="text-xs text-slate-600">👤 ผู้ยืม: <strong>{l.borrowerName}</strong> — {l.dept}</div>
+              <div className="text-[10px] text-slate-400">📅 ยืม: {l.borrowDate} {l.borrowTime} | กำหนดคืน: <span className={l.dueDate<todayStr()?'text-rose-600 font-bold':'font-bold'}>{l.dueDate}</span></div>
+              <div className="text-[10px] text-slate-400">📋 {l.purpose}</div>
+            </div>
+          </div>}):<div className="p-8 text-center text-slate-400 text-sm border-2 border-dashed rounded-xl">{canManageTool?'ไม่มีรายการยืมที่ค้างอยู่':'คุณไม่มีรายการยืมค้างอยู่'}</div>}</div>
+        </div>
+        {selLoan&&<>
+        <div><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">ตรวจสภาพตอนคืน *</label>
+          <div className="grid grid-cols-1 gap-2">{TOOL_CONDITIONS.map(c=><label key={c} className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${condIn===c?'border-emerald-400 bg-emerald-50':'border-slate-200 hover:border-emerald-300'}`}><input type="radio" name="condIn" checked={condIn===c} onChange={()=>setCondIn(c)} className="accent-emerald-600 w-4 h-4"/><span className={`text-sm font-bold ${TOOL_COND_COLORS[c]?.split(' ')[0]||'text-slate-700'}`}>{c}</span></label>)}</div>
+        </div>
+        {needsRepair&&<div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-4"><div className="font-bold text-orange-800 mb-2">รายละเอียดความเสียหาย / การซ่อม</div><textarea required value={repairNote} onChange={e=>setRepairNote(e.target.value)} rows={3} placeholder="เช่น ใบเลื่อยบิ่น ต้องเปลี่ยนใบใหม่..." className="w-full border rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-orange-400"/></div>}
+        <button type="submit" disabled={!selLoan} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 disabled:opacity-50 flex items-center justify-center gap-2"><I d={Ic.check} size={18}/>บันทึกการคืน + ผลตรวจสภาพ</button>
+        </>}
+      </form>
+    </Wrap>);
+  };
+
+  const ToolHistory=()=>{
+    const [q,setQ]=useState('');
+    const visibleLoans=canManageTool?toolLoans:toolLoans.filter(l=>l.borrowerName===user.fullName);
+    const filtered=visibleLoans.filter(l=>{if(!q)return true;const s=q.toLowerCase();const tl=toolItems.find(t=>t.id===l.toolId);return(tl?.name||'').toLowerCase().includes(s)||l.borrowerName.toLowerCase().includes(s)||l.purpose.toLowerCase().includes(s)});
+    return(<Wrap title={canManageTool?"ประวัติการยืม-คืน (ทั้งหมด)":"ประวัติการยืม-คืนของฉัน"} icon={Ic.clock}>
+      <div className="mb-4"><div className="relative max-w-md"><I d={Ic.search} size={16} cls="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="ค้นหา ชื่อเครื่องมือ, ผู้ยืม..." className="w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-400"/></div></div>
+      <div className="overflow-x-auto border rounded-xl"><table className="w-full text-sm"><thead className="bg-slate-50"><tr><th className="p-3 text-left">เลขที่</th><th className="p-3 text-left">เครื่องมือ</th><th className="p-3 text-left">ผู้ยืม</th><th className="p-3 text-center">วันยืม</th><th className="p-3 text-center">กำหนดคืน</th><th className="p-3 text-center">วันคืน</th><th className="p-3 text-center">สภาพคืน</th><th className="p-3 text-center">สถานะ</th></tr></thead>
+      <tbody className="divide-y">{filtered.map(l=>{const tl=toolItems.find(t=>t.id===l.toolId);const stCol=l.status==='ยืมอยู่'?'bg-sky-50 text-sky-700':l.status==='คืนแล้ว'?'bg-emerald-50 text-emerald-700':'bg-orange-50 text-orange-700';return<tr key={l.id} className="hover:bg-amber-50/20"><td className="p-3 font-mono text-xs text-amber-600">{l.id}</td><td className="p-3"><div className="flex items-center gap-2"><ToolImg src={tl?.image} size={28}/><div className="text-xs font-bold">{tl?.name||l.toolId}</div></div></td><td className="p-3 text-xs">{l.borrowerName}<br/><span className="text-slate-400">{l.dept}</span></td><td className="p-3 text-center text-xs">{l.borrowDate}</td><td className="p-3 text-center text-xs">{l.dueDate}</td><td className="p-3 text-center text-xs">{l.returnDate||<span className="text-slate-300">—</span>}</td><td className="p-3 text-center">{l.conditionIn?<span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${TOOL_COND_COLORS[l.conditionIn]||'bg-slate-100'}`}>{l.conditionIn}</span>:<span className="text-slate-300">—</span>}</td><td className="p-3 text-center"><span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${stCol}`}>{l.status}</span></td></tr>})}</tbody></table></div>
+    </Wrap>);
+  };
+
   const AccessDenied=()=>(<div className="p-4 md:p-8 anim-fade"><div className="bg-white rounded-2xl shadow-sm border p-12 text-center"><I d={Ic.shield} size={48} cls="text-rose-300 mx-auto mb-4"/><h2 className="text-xl font-bold text-slate-800 mb-2">ไม่มีสิทธิ์เข้าถึง</h2><p className="text-slate-500 text-sm mb-4">คุณไม่มีสิทธิ์ในการเข้าถึงหน้านี้ กรุณาติดต่อ Admin</p><button onClick={()=>nav('dashboard')} className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-700">กลับหน้าหลัก</button></div></div>);
 
   // ==================== ROUTER (with access control) ====================
@@ -2501,9 +3006,12 @@ ${t.rejectReason?'<div><span class="label">เหตุผล:</span> <span clas
     case 'set_import':return<SetImport/>;case 'set_backup':return<SetBackup/>;
     case 'acc_users':return<AccessUsers/>;case 'acc_roles':return<AccessRoles/>;case 'acc_teams':return<AccessTeams/>;case 'acc_perms':return<AccessPerms/>;case 'acc_workflow':return<AccessWorkflow/>;case 'acc_positions':return<AccessPositions/>;
     case 'profile':return<ProfileView/>;
+    case 'tool_dash':return<ToolDashboard/>;case 'tool_borrow':return<ToolBorrow/>;case 'tool_approve':return canManageTool?<ToolApprove/>:<AccessDenied/>;case 'tool_return':return<ToolReturn/>;case 'tool_history':return<ToolHistory/>;
     default:return<Dashboard/>;
   }};
 
+
+// ═══════ js/modules/router.js ═══════
   // ===== Profile View (controlled, saves properly) =====
   const ProfileView=()=>{
     const [pf,setPf]=useState({fullName:user.fullName,newPw:'',confirmPw:''});
@@ -2557,6 +3065,11 @@ ${t.rejectReason?'<div><span class="label">เหตุผล:</span> <span clas
             <Sub label="ภาพรวมคลังเหล็ก" v="steel_dash"/><Sub label="รายการเหล็ก (จัดการ)" v="steel_inv"/><Sub label="เบิกเหล็กไปตัด" v="steel_withdraw"/><Sub label="คืนเศษเหลือ (Remnant)" v="steel_return"/><Sub label="จัดการ Scrap" v="steel_scrap"/><Sub label="ประวัติธุรกรรม" v="steel_log"/>
           </Grp>
 
+          <div className="px-3 pt-5 pb-2 text-[10px] font-bold text-amber-400/70 uppercase tracking-[2px] border-t border-emerald-900 mt-3">🛠️ ยืม-คืนเครื่องมือ</div>
+          <Grp icon={Ic.wrench} label="ระบบเครื่องมือช่าง" open={menuTool} toggle={()=>setMenuTool(!menuTool)}>
+            <Sub label="ภาพรวม + ทะเบียน" v="tool_dash"/><Sub label="ขอยืมเครื่องมือ" v="tool_borrow"/>{canManageTool&&<Sub label={"อนุมัติ + จ่ายของ"+(toolLoans.filter(l=>l.status==='รออนุมัติ'||l.status==='อนุมัติ — รอรับของ').length?' ('+toolLoans.filter(l=>l.status==='รออนุมัติ'||l.status==='อนุมัติ — รอรับของ').length+')':'')} v="tool_approve"/>}<Sub label="คืนเครื่องมือ" v="tool_return"/><Sub label="ประวัติยืม-คืน" v="tool_history"/>
+          </Grp>
+
           <Grp icon={Ic.bar} label="รายงาน" open={menuRpt} toggle={()=>setMenuRpt(!menuRpt)}>
             <Sub label="สรุปยอดคงเหลือ" v="rpt_summary"/><Sub label="รับเข้าวัสดุ" v="rpt_receive"/><Sub label="เบิกวัสดุ" v="rpt_pay"/><Sub label="สรุปรวม รับ-เบิก" v="rpt_in_out"/><Sub label="เบิกตามหน่วยงาน" v="rpt_by_dept"/><Sub label="ยกเลิกการเบิก" v="rpt_cancel"/><Sub label="จำนวนเบิก(หน่วยงาน)" v="rpt_qty_dept"/><Sub label="มูลค่าเบิก(หน่วยงาน)" v="rpt_val_dept"/><Sub label="มูลค่าเบิก(หมวดหมู่)" v="rpt_val_cat"/><Sub label="ใกล้หมดจากคลัง" v="rpt_low"/><Sub label="คงเหลือปริมาณมาก" v="rpt_high"/><Sub label="หมดจากคลัง" v="rpt_oos"/><Sub label="ไม่มีการเบิก" v="rpt_no_move"/><Sub label="เลิกใช้งาน" v="rpt_inactive"/>
           </Grp>
@@ -2584,16 +3097,16 @@ ${t.rejectReason?'<div><span class="label">เหตุผล:</span> <span clas
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>Mobile
           </button>
           <div className="relative">
-            <button onClick={()=>setView(view==='_notif_panel'?'dashboard':'_notif_panel')} className="text-slate-400 hover:text-emerald-600 relative p-2 hover:bg-emerald-50 rounded-xl">
+            <button onClick={()=>setShowNotifPanel(!showNotifPanel)} className="text-slate-400 hover:text-emerald-600 relative p-2 hover:bg-emerald-50 rounded-xl">
               <I d={Ic.bell} size={20}/>
               {(()=>{const myN=notifs.filter(n=>!n.read&&(n.targetUser===user.fullName||n.targetRoles.includes(user.role)));return myN.length>0&&<span className="absolute -top-0.5 -right-0.5 bg-rose-500 rounded-full text-[9px] text-white font-bold flex items-center justify-center" style={{width:18,height:18,minWidth:18}}>{myN.length}</span>})()}
             </button>
-            {view==='_notif_panel'&&<div className="absolute right-0 top-12 w-96 bg-white rounded-2xl shadow-2xl border z-50 anim-slide overflow-hidden" style={{maxHeight:'70vh'}}>
+            {showNotifPanel&&<div className="absolute right-0 top-12 w-96 bg-white rounded-2xl shadow-2xl border z-50 anim-slide overflow-hidden" style={{maxHeight:'70vh'}}>
               <div className="p-4 border-b bg-slate-50 flex justify-between items-center"><span className="font-bold text-slate-800 flex items-center gap-2"><I d={Ic.bell} size={18} cls="text-emerald-600"/>แจ้งเตือน</span>
               {notifs.filter(n=>!n.read&&(n.targetUser===user.fullName||n.targetRoles.includes(user.role))).length>0&&<button onClick={()=>{setNotifs(notifs.map(n=>(n.targetUser===user.fullName||n.targetRoles.includes(user.role))?{...n,read:true}:n))}} className="text-[10px] text-emerald-600 font-bold hover:underline">อ่านทั้งหมด</button>}</div>
               <div className="overflow-y-auto" style={{maxHeight:'55vh'}}>
               {(()=>{const myNotifs=notifs.filter(n=>n.targetUser===user.fullName||n.targetRoles.includes(user.role));
-                return myNotifs.length?myNotifs.slice(0,20).map(n=><div key={n.id} className={`p-3.5 border-b hover:bg-slate-50 cursor-pointer ${n.read?'opacity-60':''}`} onClick={()=>{if(!n.read)setNotifs(notifs.map(x=>x.id===n.id?{...x,read:true}:x));if(n.link==='pr_list'||n.link==='pr')nav('pr_list');else if(n.link==='requisition')nav('approvals');setView(n.link==='pr_list'||n.link==='pr'?'pr_list':n.link==='requisition'?'approvals':'dashboard');}}>
+                return myNotifs.length?myNotifs.slice(0,20).map(n=><div key={n.id} className={`p-3.5 border-b hover:bg-slate-50 cursor-pointer ${n.read?'opacity-60':''}`} onClick={()=>{if(!n.read)setNotifs(notifs.map(x=>x.id===n.id?{...x,read:true}:x));setShowNotifPanel(false);if(n.link==='pr_list'||n.link==='pr')nav('pr_list');else if(n.link==='requisition')nav('approvals');else nav('dashboard');}}>
                   <div className="flex justify-between items-start mb-1"><span className="font-bold text-sm text-slate-800">{n.title}</span>{!n.read&&<div className="w-2 h-2 bg-emerald-500 rounded-full mt-1.5 shrink-0"/>}</div>
                   <div className="text-xs text-slate-600 mb-1">{n.msg}</div>
                   <div className="text-[10px] text-slate-400">จาก {n.from} • {n.date} {n.time}</div>
