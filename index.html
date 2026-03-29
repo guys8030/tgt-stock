@@ -215,63 +215,51 @@ const ACCOUNTS=[
   {id:'U09',username:'fm',password:'1234',fullName:'ผู้จัดการโรงงาน',role:'FM',dept:'ฝ่ายผลิต',avatar:'FM'},
 ];
 
-// ========== SUPABASE PERSISTENCE ==========
-const SUPABASE_URL='https://ypsxazjokwesnwaoaglr.supabase.co';
-const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlwc3hhempva3dlc253YW9hZ2xyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NzEzMDUsImV4cCI6MjA5MDM0NzMwNX0.14VKOYGsrfVuarsjZNVq3GqzBO6gTVChwk4jjDZT3ns';
-const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+// ========== SUPABASE CLOUD + REALTIME PERSISTENCE ==========
+const SB_URL='https://ypsxazjokwesnwaoaglr.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlwc3hhempva3dlc253YW9hZ2xyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NzEzMDUsImV4cCI6MjA5MDM0NzMwNX0.14VKOYGsrfVuarsjZNVq3GqzBO6gTVChwk4jjDZT3ns';
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
 
-// Table mapping: localStorage key -> Supabase table name
-const TABLE_MAP={
-  items:'items', txns:'txns', reqs:'reqs', prs:'prs', notifs:'notifs',
-  cats:'cats', depts:'depts', locs:'locs', sups:'sups', apvs:'apvs',
-  steels:'steels', steelTxns:'steel_txns', toolItems:'tool_items',
-  toolLoans:'tool_loans', accounts:'accounts'
-};
+// All state keys
+const STATE_KEYS=['items','txns','reqs','prs','notifs','cats','depts','locs','sups','apvs','steels','steelTxns','toolItems','toolLoans','accounts'];
 
-// Load from Supabase (returns fallback if empty/error)
-const sbLoad=async(key,fallback)=>{
+// Defaults map
+const DEFAULTS={items:INIT_ITEMS,txns:[],reqs:[],prs:[],notifs:[],cats:CATS,depts:DEPTS,locs:LOCS,sups:SUPS,apvs:APVS,steels:INIT_STEELS,steelTxns:[],toolItems:INIT_TOOLS,toolLoans:INIT_LOANS,accounts:ACCOUNTS};
+
+// Load one key from Supabase
+const sbLoad=async(key)=>{
   try{
-    const table=TABLE_MAP[key];
-    if(!table)return fallback;
-    const{data,error}=await supabase.from(table).select('*');
-    if(error){console.error('Supabase load error ['+key+']:',error);return fallback;}
-    if(!data||data.length===0)return fallback;
-    // Transform: remove Supabase internal columns, reconstruct original shape
-    return data.map(row=>{
-      const{created_at,...rest}=row;
-      return rest;
-    });
-  }catch(e){console.error('sbLoad error:',e);return fallback;}
+    const{data,error}=await sb.from('app_state').select('value').eq('key',key).single();
+    if(error||!data||!data.value||data.value.length===0)return DEFAULTS[key]||[];
+    return data.value;
+  }catch(e){return DEFAULTS[key]||[];}
 };
 
-// Save to Supabase (upsert entire dataset)
-const sbSave=async(key,val)=>{
-  try{
-    const table=TABLE_MAP[key];
-    if(!table||!val||!Array.isArray(val))return;
-    // Delete all then insert (simple replace strategy)
-    await supabase.from(table).delete().neq('id','__never_match__');
-    if(val.length>0){
-      const{error}=await supabase.from(table).upsert(val,{onConflict:'id'});
-      if(error)console.error('Supabase save error ['+key+']:',error);
-    }
-  }catch(e){console.error('sbSave error:',e);}
+// Save one key to Supabase (upsert)
+let _saveTimers={};
+const sbSave=(key,val)=>{
+  // Debounce 500ms per key to avoid hammering
+  if(_saveTimers[key])clearTimeout(_saveTimers[key]);
+  _saveTimers[key]=setTimeout(async()=>{
+    try{
+      await sb.from('app_state').upsert({key,value:val},{onConflict:'key'});
+    }catch(e){console.error('sbSave error ['+key+']:',e);}
+  },500);
 };
 
-// Clear all Supabase tables
+// Clear all in Supabase
 const sbClear=async()=>{
   try{
-    for(const key of Object.keys(TABLE_MAP)){
-      const table=TABLE_MAP[key];
-      await supabase.from(table).delete().neq('id','__never_match__');
+    for(const k of STATE_KEYS){
+      await sb.from('app_state').upsert({key:k,value:DEFAULTS[k]||[]},{onConflict:'key'});
     }
   }catch(e){console.error('sbClear error:',e);}
 };
 
-// Keep localStorage as fast cache (optional fallback)
+// localStorage as instant cache
 const LS_KEY='tgt-stock-v9';
-const lsLoad=(key,fallback)=>{try{const d=localStorage.getItem(LS_KEY+'-'+key);return d?JSON.parse(d):fallback;}catch(e){return fallback;}};
-const lsSave=(key,val)=>{try{localStorage.setItem(LS_KEY+'-'+key,JSON.stringify(val));}catch(e){console.error('localStorage save failed:',e);}};
+const lsLoad=(key,fb)=>{try{const d=localStorage.getItem(LS_KEY+'-'+key);return d?JSON.parse(d):fb;}catch(e){return fb;}};
+const lsSave=(key,val)=>{try{localStorage.setItem(LS_KEY+'-'+key,JSON.stringify(val));}catch(e){}};
 const lsClear=()=>{Object.keys(localStorage).filter(k=>k.startsWith(LS_KEY)).forEach(k=>localStorage.removeItem(k));};
 
 // ═══════ js/shared.js ═══════
@@ -354,11 +342,9 @@ function App(){
   const [locs,setLocs]=useState(()=>lsLoad('locs',LOCS));
   const [sups,setSups]=useState(()=>lsLoad('sups',SUPS));
   const [apvs,setApvs]=useState(()=>lsLoad('apvs',APVS));
-  // usrs state removed — UserMgmt and AccessUsers both use accounts state
   const [steels,setSteels]=useState(()=>lsLoad('steels',INIT_STEELS));
   const [steelTxns,setSteelTxns]=useState(()=>lsLoad('steelTxns',[]));
   const [menuSteel,setMenuSteel]=useState(false);
-  // ===== TOOL LENDING STATE =====
   const [toolItems,setToolItems]=useState(()=>lsLoad('toolItems',INIT_TOOLS));
   const [toolLoans,setToolLoans]=useState(()=>lsLoad('toolLoans',INIT_LOANS));
   const [menuTool,setMenuTool]=useState(false);
@@ -367,84 +353,86 @@ function App(){
   const [accounts,setAccounts]=useState(()=>lsLoad('accounts',ACCOUNTS));
   const [menuAccess,setMenuAccess]=useState(false);
 
-  // ===== SUPABASE: Loading state & initial data fetch =====
+  // ===== SUPABASE: Loading + Realtime =====
   const [dataLoaded,setDataLoaded]=useState(false);
-  const [loadingMsg,setLoadingMsg]=useState('กำลังเชื่อมต่อ Supabase...');
-  const dataLoadedRef=React.useRef(false);
+  const [loadingMsg,setLoadingMsg]=useState('กำลังเชื่อมต่อ Supabase Cloud...');
+  const [cloudStatus,setCloudStatus]=useState('connecting'); // connecting | online | offline
+  const readyRef=React.useRef(false);
 
+  // Setter map for realtime updates
+  const setterMap=React.useRef({items:setItems,txns:setTxns,reqs:setReqs,prs:setPrs,notifs:setNotifs,cats:setCats,depts:setDepts,locs:setLocs,sups:setSups,apvs:setApvs,steels:setSteels,steelTxns:setSteelTxns,toolItems:setToolItems,toolLoans:setToolLoans,accounts:setAccounts});
+
+  // ── Initial load from Supabase ──
   useEffect(()=>{
     let cancelled=false;
     const loadAll=async()=>{
       try{
-        setLoadingMsg('กำลังโหลดข้อมูลจาก Supabase Cloud...');
-        const results=await Promise.all([
-          sbLoad('items',INIT_ITEMS),
-          sbLoad('txns',[]),
-          sbLoad('reqs',[]),
-          sbLoad('prs',[]),
-          sbLoad('notifs',[]),
-          sbLoad('cats',CATS),
-          sbLoad('depts',DEPTS),
-          sbLoad('locs',LOCS),
-          sbLoad('sups',SUPS),
-          sbLoad('apvs',APVS),
-          sbLoad('steels',INIT_STEELS),
-          sbLoad('steelTxns',[]),
-          sbLoad('toolItems',INIT_TOOLS),
-          sbLoad('toolLoans',INIT_LOANS),
-          sbLoad('accounts',ACCOUNTS),
-        ]);
-        if(cancelled)return;
-        setItems(results[0]);
-        setTxns(results[1]);
-        setReqs(results[2]);
-        setPrs(results[3]);
-        setNotifs(results[4]);
-        setCats(results[5]);
-        setDepts(results[6]);
-        setLocs(results[7]);
-        setSups(results[8]);
-        setApvs(results[9]);
-        setSteels(results[10]);
-        setSteelTxns(results[11]);
-        setToolItems(results[12]);
-        setToolLoans(results[13]);
-        setAccounts(results[14]);
-        // Also cache to localStorage
-        const keys=['items','txns','reqs','prs','notifs','cats','depts','locs','sups','apvs','steels','steelTxns','toolItems','toolLoans','accounts'];
-        keys.forEach((k,i)=>lsSave(k,results[i]));
-        setLoadingMsg('โหลดข้อมูลสำเร็จ!');
-        setTimeout(()=>{if(!cancelled){dataLoadedRef.current=true;setDataLoaded(true);}},300);
+        setLoadingMsg('กำลังโหลดข้อมูลจาก Cloud...');
+        const{data,error}=await sb.from('app_state').select('key,value');
+        if(error)throw error;
+        if(data&&data.length>0){
+          const map={};data.forEach(r=>{map[r.key]=r.value;});
+          STATE_KEYS.forEach(k=>{
+            const val=map[k];
+            if(val&&Array.isArray(val)&&val.length>0){
+              setterMap.current[k]?.(val);
+              lsSave(k,val);
+            }else if(DEFAULTS[k]&&DEFAULTS[k].length>0){
+              // First time: push defaults to Supabase
+              sbSave(k,DEFAULTS[k]);
+            }
+          });
+        }else{
+          // Empty DB: push all defaults
+          STATE_KEYS.forEach(k=>{if(DEFAULTS[k])sbSave(k,DEFAULTS[k]);});
+        }
+        if(!cancelled){setCloudStatus('online');setLoadingMsg('เชื่อมต่อสำเร็จ!');}
       }catch(e){
-        console.error('Failed to load from Supabase:',e);
-        setLoadingMsg('โหลดจาก Supabase ไม่สำเร็จ — ใช้ข้อมูล localStorage');
-        setTimeout(()=>{if(!cancelled){dataLoadedRef.current=true;setDataLoaded(true);}},1000);
+        console.error('Supabase load error:',e);
+        if(!cancelled){setCloudStatus('offline');setLoadingMsg('ใช้ข้อมูล offline (localStorage)');}
       }
+      setTimeout(()=>{if(!cancelled){readyRef.current=true;setDataLoaded(true);}},400);
     };
     loadAll();
     return()=>{cancelled=true;};
   },[]);
 
+  // ── Realtime subscription: listen for changes from other users ──
+  useEffect(()=>{
+    const channel=sb.channel('app_state_changes')
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'app_state'},(payload)=>{
+        const{key,value}=payload.new;
+        if(key&&value&&setterMap.current[key]){
+          setterMap.current[key](value);
+          lsSave(key,value);
+        }
+      })
+      .subscribe((status)=>{
+        if(status==='SUBSCRIBED')setCloudStatus('online');
+      });
+    return()=>{sb.removeChannel(channel);};
+  },[]);
+
   useEffect(()=>{const h=()=>setIsMobile(window.innerWidth<768);window.addEventListener('resize',h);return()=>window.removeEventListener('resize',h);},[]);
 
-  // ===== AUTO-SAVE to localStorage + Supabase on every state change =====
-  useEffect(()=>{lsSave('items',items);if(dataLoadedRef.current)sbSave('items',items);},[items]);
-  useEffect(()=>{lsSave('txns',txns);if(dataLoadedRef.current)sbSave('txns',txns);},[txns]);
-  useEffect(()=>{lsSave('reqs',reqs);if(dataLoadedRef.current)sbSave('reqs',reqs);},[reqs]);
-  useEffect(()=>{lsSave('prs',prs);if(dataLoadedRef.current)sbSave('prs',prs);},[prs]);
-  useEffect(()=>{lsSave('notifs',notifs);if(dataLoadedRef.current)sbSave('notifs',notifs);},[notifs]);
-  useEffect(()=>{lsSave('cats',cats);if(dataLoadedRef.current)sbSave('cats',cats);},[cats]);
-  useEffect(()=>{lsSave('depts',depts);if(dataLoadedRef.current)sbSave('depts',depts);},[depts]);
-  useEffect(()=>{lsSave('locs',locs);if(dataLoadedRef.current)sbSave('locs',locs);},[locs]);
-  useEffect(()=>{lsSave('sups',sups);if(dataLoadedRef.current)sbSave('sups',sups);},[sups]);
-  useEffect(()=>{lsSave('apvs',apvs);if(dataLoadedRef.current)sbSave('apvs',apvs);},[apvs]);
-  useEffect(()=>{lsSave('steels',steels);if(dataLoadedRef.current)sbSave('steels',steels);},[steels]);
-  useEffect(()=>{lsSave('steelTxns',steelTxns);if(dataLoadedRef.current)sbSave('steelTxns',steelTxns);},[steelTxns]);
-  useEffect(()=>{lsSave('toolItems',toolItems);if(dataLoadedRef.current)sbSave('toolItems',toolItems);},[toolItems]);
-  useEffect(()=>{lsSave('toolLoans',toolLoans);if(dataLoadedRef.current)sbSave('toolLoans',toolLoans);},[toolLoans]);
-  useEffect(()=>{lsSave('accounts',accounts);if(dataLoadedRef.current)sbSave('accounts',accounts);},[accounts]);
+  // ===== AUTO-SAVE: localStorage (instant) + Supabase (debounced) =====
+  useEffect(()=>{lsSave('items',items);if(readyRef.current)sbSave('items',items);},[items]);
+  useEffect(()=>{lsSave('txns',txns);if(readyRef.current)sbSave('txns',txns);},[txns]);
+  useEffect(()=>{lsSave('reqs',reqs);if(readyRef.current)sbSave('reqs',reqs);},[reqs]);
+  useEffect(()=>{lsSave('prs',prs);if(readyRef.current)sbSave('prs',prs);},[prs]);
+  useEffect(()=>{lsSave('notifs',notifs);if(readyRef.current)sbSave('notifs',notifs);},[notifs]);
+  useEffect(()=>{lsSave('cats',cats);if(readyRef.current)sbSave('cats',cats);},[cats]);
+  useEffect(()=>{lsSave('depts',depts);if(readyRef.current)sbSave('depts',depts);},[depts]);
+  useEffect(()=>{lsSave('locs',locs);if(readyRef.current)sbSave('locs',locs);},[locs]);
+  useEffect(()=>{lsSave('sups',sups);if(readyRef.current)sbSave('sups',sups);},[sups]);
+  useEffect(()=>{lsSave('apvs',apvs);if(readyRef.current)sbSave('apvs',apvs);},[apvs]);
+  useEffect(()=>{lsSave('steels',steels);if(readyRef.current)sbSave('steels',steels);},[steels]);
+  useEffect(()=>{lsSave('steelTxns',steelTxns);if(readyRef.current)sbSave('steelTxns',steelTxns);},[steelTxns]);
+  useEffect(()=>{lsSave('toolItems',toolItems);if(readyRef.current)sbSave('toolItems',toolItems);},[toolItems]);
+  useEffect(()=>{lsSave('toolLoans',toolLoans);if(readyRef.current)sbSave('toolLoans',toolLoans);},[toolLoans]);
+  useEffect(()=>{lsSave('accounts',accounts);if(readyRef.current)sbSave('accounts',accounts);},[accounts]);
 
-  // ===== RESET to default data (Admin only) =====
+  // ===== RESET to default data =====
   const resetAllData=async()=>{
     if(!window.confirm('ยืนยันรีเซ็ตข้อมูลทั้งหมดกลับเป็นค่าเริ่มต้น?\n\nข้อมูลที่แก้ไขทั้งหมดจะหายไป รวมถึงธุรกรรม, ใบเบิก, PR, และการแจ้งเตือน'))return;
     lsClear();
@@ -453,7 +441,7 @@ function App(){
     setCats(CATS);setDepts(DEPTS);setLocs(LOCS);setSups(SUPS);setApvs(APVS);
     setSteels(INIT_STEELS);setSteelTxns([]);setAccounts(ACCOUNTS);
     setToolItems(INIT_TOOLS);setToolLoans(INIT_LOANS);
-    notify('รีเซ็ตข้อมูลทั้งหมดสำเร็จ — กลับเป็นค่าเริ่มต้น (Supabase + localStorage)');
+    notify('รีเซ็ตสำเร็จ — ข้อมูลกลับเป็นค่าเริ่มต้นทั้ง Cloud + Local');
   };
 
   // ========== USER ACCESS MANAGEMENT DATA ==========
@@ -537,18 +525,28 @@ function App(){
     </div>);
   };
 
-  // ===== LOADING SCREEN (while Supabase data loads) =====
+  // ===== LOADING SCREEN =====
   if(!dataLoaded) return(<div style={{minHeight:'100vh',background:'linear-gradient(135deg,#059669 0%,#047857 40%,#065f46 100%)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'Sarabun',sans-serif"}}>
     <div style={{textAlign:'center',color:'#fff'}}>
       <div style={{fontSize:48,marginBottom:16}}>☁️</div>
       <div style={{fontSize:22,fontWeight:700,marginBottom:8}}>TGT Store V9.0</div>
       <div style={{fontSize:14,opacity:0.9,marginBottom:20}}>{loadingMsg}</div>
       <div style={{width:200,height:4,background:'rgba(255,255,255,0.2)',borderRadius:2,margin:'0 auto',overflow:'hidden'}}>
-        <div style={{width:'60%',height:'100%',background:'#fff',borderRadius:2,animation:'loading 1.5s ease-in-out infinite'}}></div>
+        <div style={{width:'60%',height:'100%',background:'#fff',borderRadius:2,animation:'sbloading 1.5s ease-in-out infinite'}}></div>
       </div>
-      <style>{'@keyframes loading{0%{transform:translateX(-100%)}50%{transform:translateX(100%)}100%{transform:translateX(-100%)}}'}</style>
+      <style>{'@keyframes sbloading{0%{transform:translateX(-100%)}50%{transform:translateX(100%)}100%{transform:translateX(-100%)}}'}</style>
     </div>
   </div>);
+
+  // ===== Cloud status badge helper =====
+  const CloudBadge=()=>{
+    const colors={online:'#22c55e',connecting:'#f59e0b',offline:'#ef4444'};
+    const labels={online:'☁️ Cloud Sync',connecting:'⏳ กำลังเชื่อมต่อ...',offline:'📴 Offline (localStorage)'};
+    return(<div style={{display:'inline-flex',alignItems:'center',gap:4,fontSize:10,fontWeight:700,color:colors[cloudStatus]||'#94a3b8',background:cloudStatus==='online'?'#f0fdf4':cloudStatus==='offline'?'#fef2f2':'#fffbeb',padding:'2px 8px',borderRadius:8}}>
+      <span style={{width:6,height:6,borderRadius:3,background:colors[cloudStatus]||'#94a3b8',display:'inline-block'}}></span>
+      {labels[cloudStatus]||'Unknown'}
+    </div>);
+  };
 
   if(!user) return <LoginScreen/>;
   const role=user.role;
@@ -2198,7 +2196,7 @@ ${t.rejectReason?'<div><span class="label">เหตุผล:</span> <span clas
       {isAdmin&&<button onClick={resetAllData} style={{width:'100%',padding:12,border:'1.5px solid #fde68a',borderRadius:12,background:'#fffbeb',color:'#d97706',fontSize:14,fontWeight:700,fontFamily:'inherit',cursor:'pointer',marginBottom:10}}>รีเซ็ตข้อมูลทั้งหมด</button>}
       {canDesktop&&<button onClick={()=>setIsMobile(false)} style={{width:'100%',padding:12,border:'1.5px solid #e2e8f0',borderRadius:12,background:'#fff',color:'#1e293b',fontSize:14,fontWeight:700,fontFamily:'inherit',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,marginBottom:10}}>เปิดหน้า Desktop</button>}
       <button onClick={logout} style={{width:'100%',padding:12,border:'1px solid #fecaca',borderRadius:12,background:'#fef2f2',color:'#dc2626',fontSize:14,fontWeight:700,fontFamily:'inherit',cursor:'pointer'}}>ออกจากระบบ</button>
-      <div style={{textAlign:'center',fontSize:11,color:'#94a3b8',marginTop:12}}>TGT Store V9.0 — ☁️ Supabase Cloud Database • Login: {user.username} ({user.role})</div>
+      <div style={{textAlign:'center',fontSize:11,color:'#94a3b8',marginTop:12,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>TGT Store V9.0 <CloudBadge/> Login: {user.username} ({user.role})</div>
     </div></>;
 
     // ===== Mobile Tool Borrow =====
