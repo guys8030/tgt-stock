@@ -585,7 +585,7 @@
             <div class="field">
               <label>กว้างชิ้นงาน (มม.)</label>
               <input type="number" id="laserWidth" placeholder="เช่น 200">
-              <span class="hint">ไม่ต้องบวก +10 ระบบจะคำนวณให้</span>
+              <span class="hint">กรอกขนาดชิ้นงานจริง</span>
             </div>
             <div class="field">
               <label>ยาวชิ้นงาน (มม.)</label>
@@ -597,9 +597,9 @@
               <span class="hint">ถ้าไม่ทราบ ใช้ ML วงกลมด้านล่าง</span>
             </div>
             <div class="field">
-              <label>จำนวนรู (รู)</label>
+              <label>จำนวนรู+1 (H)</label>
               <input type="number" id="laserHoles" value="0" min="0">
-              <span class="hint">ระบบเพิ่ม +1 อัตโนมัติ</span>
+              <span class="hint">เหมือน Excel: ถ้างานมี 5 รู กรอก 6 (เผื่อเจาะเริ่มต้น +1)</span>
             </div>
             <div class="field">
               <label>ราคา/นาที (บาท) <small>override</small></label>
@@ -611,6 +611,19 @@
             </div>
           </div>
           <div class="info-box" id="laserInfo">กรอกข้อมูลเพื่อคำนวณ</div>
+
+          <details style="margin-top: 10px;">
+            <summary>📊 เทียบกับ Excel (ช่วยตรวจสอบความถูกต้อง)</summary>
+            <div class="details-body">
+              <div class="info-box" style="display: block;">
+                <strong>✅ โปรแกรมใช้สูตรเดียวกับ Excel เป๊ะ</strong><br>
+                การกรอก <strong>จำนวนรู+1</strong> ทำเหมือน Excel — ถ้างานมี 5 รู กรอก 6
+              </div>
+              <div id="excelCompare" style="margin-top: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--bg); padding: 10px; border-radius: 6px;">
+                กรอกข้อมูลเพื่อดูการเปรียบเทียบ
+              </div>
+            </div>
+          </details>
 
           <details style="margin-top: 14px;">
             <summary>🔵 คำนวณ ML วงกลม</summary>
@@ -1111,20 +1124,57 @@ function computeLaser() {
   const rate = isFinite(rateOverride) && rateOverride > 0 ? rateOverride : spec.rate;
   const matPrice = isFinite(matPriceOverride) && matPriceOverride > 0 ? matPriceOverride : spec.matPrice;
 
-  // Formula from Excel: F = ((ML/Feed*60) + ((holes+1)*piercing)) / 60  [minutes]
-  const timeMin = ml > 0 ? ((ml / spec.feed) * 60 + (holes + 1) * spec.piercing) / 60 : 0;
+  // Formula from Excel: F = ((ML/Feed*60) + (H*piercing)) / 60  [minutes]
+  // H ใน Excel = จำนวนรู+1 — ผู้ใช้ต้องบวกเองเหมือน Excel
+  const H = holes;  // ใช้ค่าที่ผู้ใช้กรอกตรงๆ (ไม่บวก +1 อัตโนมัติแล้ว)
+  const cuttingTimeSec = ml > 0 ? (ml / spec.feed) * 60 : 0;       // เวลาเดินตัด (วินาที)
+  const piercingTimeSec = H * spec.piercing;                       // เวลาเจาะรู (วินาที)
+  const totalTimeSec = cuttingTimeSec + piercingTimeSec;
+  const timeMin = totalTimeSec / 60;                               // รวม → นาที
   const cutPrice = timeMin * rate;
 
-  // Material: (width+10) * (length+10) * density * thickness / 1,000,000 = kg
-  const weightKg = w > 0 && l > 0 ? ((w + 10) * (l + 10) * spec.density * spec.t) / 1000000 : 0;
+  // Material: width * length * density * thickness / 1,000,000 = kg
+  const weightKg = w > 0 && l > 0 ? (w * l * spec.density * spec.t) / 1000000 : 0;
   const materialCost = weightKg * matPrice;
 
   document.getElementById('laserInfo').innerHTML = `
-    <strong>${spec.material} ${spec.t}mm.</strong> · Feed: ${fmtInt(spec.feed)} mm/min · Piercing: ${spec.piercing}s · Gas: ${spec.gas || '-'}<br>
-    ⏱️ เวลาตัด: <strong>${timeMin.toFixed(3)} นาที</strong> × ${rate} บาท = <strong>฿${fmt(cutPrice)}</strong><br>
-    ⚖️ น้ำหนัก: <strong>${weightKg.toFixed(3)} kg</strong> × ${matPrice} บาท = <strong>฿${fmt(materialCost)}</strong><br>
-    💰 รวม/ชิ้น: <strong>฿${fmt(cutPrice + materialCost)}</strong>
+    <div style="margin-bottom: 6px;"><strong>${spec.material} ${spec.t}mm.</strong> · Feed: ${fmtInt(spec.feed)} mm/min · Piercing: ${spec.piercing}s · Gas: ${spec.gas || '-'}</div>
+    <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; background: rgba(255,255,255,.5); padding: 6px 10px; border-radius: 4px; margin-bottom: 6px;">
+      <div>⏱️ เวลาเดินตัด = ML/Feed × 60 = ${ml}/${fmtInt(spec.feed)} × 60 = <strong>${cuttingTimeSec.toFixed(2)}s</strong></div>
+      <div>🔹 เวลาเจาะรู = H × Piercing = ${H} × ${spec.piercing} = <strong>${piercingTimeSec.toFixed(2)}s</strong></div>
+      <div>➤ รวม = ${totalTimeSec.toFixed(2)}s ÷ 60 = <strong>${timeMin.toFixed(4)} นาที</strong></div>
+    </div>
+    <div>💰 ค่าตัด: ${timeMin.toFixed(4)} นาที × ฿${rate} = <strong>฿${fmt(cutPrice)}</strong></div>
+    <div>⚖️ น้ำหนัก: ${w}×${l}×${spec.density}×${spec.t}÷10⁶ = <strong>${weightKg.toFixed(3)} kg</strong></div>
+    <div>📦 ค่าวัสดุ: ${weightKg.toFixed(3)} × ฿${matPrice} = <strong>฿${fmt(materialCost)}</strong></div>
+    <div style="border-top: 1px solid rgba(12,104,84,.2); margin-top: 6px; padding-top: 6px;">🎯 <strong>รวม/ชิ้น: ฿${fmt(cutPrice + materialCost)}</strong></div>
   `;
+
+  // Excel comparison panel
+  const excelEl = document.getElementById('excelCompare');
+  if (excelEl) {
+    excelEl.innerHTML = `
+      <div style="color: var(--muted); font-size: 11px; margin-bottom: 8px;">สูตร Excel: <strong>F = ((G/C*60) + (H*D)) / 60</strong></div>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr style="border-bottom: 1px solid var(--line);">
+          <td style="padding: 4px 6px; color: var(--muted);">ตัวแปร</td>
+          <td style="padding: 4px 6px; color: var(--muted);">ความหมาย</td>
+          <td style="padding: 4px 6px; color: var(--muted);">ค่าที่ใช้</td>
+        </tr>
+        <tr><td style="padding: 4px 6px;"><strong>G</strong></td><td style="padding: 4px 6px;">ML ความยาวเส้นตัด (mm)</td><td style="padding: 4px 6px;">${ml}</td></tr>
+        <tr><td style="padding: 4px 6px;"><strong>C</strong></td><td style="padding: 4px 6px;">Feed (auto จากตาราง)</td><td style="padding: 4px 6px;">${fmtInt(spec.feed)}</td></tr>
+        <tr><td style="padding: 4px 6px;"><strong>H</strong></td><td style="padding: 4px 6px;">จำนวนรู+1 (กรอกเอง)</td><td style="padding: 4px 6px;">${H}</td></tr>
+        <tr><td style="padding: 4px 6px;"><strong>D</strong></td><td style="padding: 4px 6px;">Piercing (auto จากตาราง)</td><td style="padding: 4px 6px;">${spec.piercing}</td></tr>
+      </table>
+      <div style="border-top: 1px dashed var(--line); margin-top: 8px; padding-top: 8px;">
+        <div>F = ((${ml}/${fmtInt(spec.feed)}*60) + (${H}*${spec.piercing})) / 60</div>
+        <div>F = (${cuttingTimeSec.toFixed(2)} + ${piercingTimeSec.toFixed(2)}) / 60</div>
+        <div>F = <strong>${timeMin.toFixed(4)} นาที</strong></div>
+        <div style="margin-top: 6px; color: var(--primary-dark);"><strong>✅ ตัวเลขนี้ตรงกับ Column F ใน Excel</strong></div>
+      </div>
+    `;
+  }
+
   return {spec, w, l, ml, holes, rate, matPrice, timeMin, cutPrice, weightKg, materialCost, total: cutPrice + materialCost};
 }
 function calcCircleML() {
