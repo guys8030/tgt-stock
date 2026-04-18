@@ -2,7 +2,10 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0c6854">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>TGT Metalworks — ระบบคำนวณราคางานเลเซอร์</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -496,10 +499,205 @@
   }
   .quote-total-row { background: #f6f7f5; font-weight: 700; }
 
+  /* ============================================================
+     MOBILE MODE — เมื่อ body มี class "mobile-mode"
+     หรือเมื่อ screen แคบกว่า 768px (auto)
+     ============================================================ */
+  body.mobile-mode {
+    --mobile-active: 1;
+    padding-bottom: 80px; /* space for sticky bottom total bar */
+  }
+
+  body.mobile-mode .app { padding: 0; max-width: 100%; }
+
+  /* Header compact */
+  body.mobile-mode header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    border-radius: 0;
+    padding: env(safe-area-inset-top, 0) 14px 12px;
+    padding-top: calc(14px + env(safe-area-inset-top, 0));
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  body.mobile-mode header .brand { gap: 10px; }
+  body.mobile-mode header .logo { width: 40px; height: 40px; font-size: 16px; border-radius: 10px; }
+  body.mobile-mode header h1 { font-size: 16px; }
+  body.mobile-mode header .subtitle {
+    font-size: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+  }
+  body.mobile-mode .header-actions { gap: 6px; }
+  body.mobile-mode .header-actions .btn {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  body.mobile-mode #modeToggleLabel { display: none; }
+
+  /* Single column layout */
+  body.mobile-mode .layout { grid-template-columns: 1fr; gap: 10px; padding: 0 12px; }
+
+  /* Panel compact */
+  body.mobile-mode .panel {
+    padding: 14px 16px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+  }
+  body.mobile-mode .panel h2 {
+    font-size: 13px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+  }
+
+  /* Form grid → single column on mobile */
+  body.mobile-mode .form-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  body.mobile-mode .field input,
+  body.mobile-mode .field select {
+    font-size: 16px; /* ป้องกัน iOS zoom */
+    padding: 10px 12px;
+    min-height: 44px;
+  }
+  body.mobile-mode .field label {
+    font-size: 11px;
+  }
+
+  /* Process tabs → horizontal scroll pills */
+  body.mobile-mode .tabs {
+    overflow-x: auto;
+    padding: 4px;
+    gap: 4px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  body.mobile-mode .tabs::-webkit-scrollbar { display: none; }
+  body.mobile-mode .tab {
+    flex: 0 0 auto;
+    min-width: auto;
+    padding: 8px 14px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  /* Hide right summary panel, show bottom bar instead */
+  body.mobile-mode .right { display: none; }
+
+  body.mobile-mode .mobile-bottom-bar {
+    display: flex !important;
+  }
+
+  /* Bottom sticky bar (hidden on desktop, shown in mobile mode) */
+  .mobile-bottom-bar {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    box-shadow: 0 -4px 16px rgba(13,27,23,.1);
+    padding: 10px 16px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0));
+    z-index: 30;
+    align-items: center;
+    gap: 12px;
+    border-top: 1px solid var(--line);
+  }
+  .mobile-bottom-bar .mb-info { flex: 1; min-width: 0; }
+  .mobile-bottom-bar .mb-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+  .mobile-bottom-bar .mb-total {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    line-height: 1.1;
+  }
+  .mobile-bottom-bar .mb-count {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .mobile-bottom-bar button {
+    padding: 10px 16px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .mobile-bottom-bar button:disabled { opacity: .4; }
+
+  /* Result tables more compact */
+  body.mobile-mode .result-table { font-size: 11px; }
+  body.mobile-mode .result-table th,
+  body.mobile-mode .result-table td { padding: 6px 4px; }
+
+  /* Items list scrolling */
+  body.mobile-mode .items-list { max-height: none; }
+
+  /* Item card mobile layout */
+  body.mobile-mode .item-card { padding: 10px 12px; margin-bottom: 6px; }
+  body.mobile-mode .item-card .item-name { font-size: 13px; }
+  body.mobile-mode .item-card .item-meta { font-size: 10px; }
+  body.mobile-mode .item-card .item-price { font-size: 13px; }
+
+  /* Reference section collapse on mobile */
+  body.mobile-mode details summary { font-size: 12px; }
+
+  /* Add button wider touch target */
+  body.mobile-mode .btn {
+    min-height: 44px;
+    padding: 10px 14px;
+  }
+
+  /* Info box smaller padding */
+  body.mobile-mode .info-box, body.mobile-mode .warn-box {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  /* Hide Excel compare details on mobile to save space */
+  body.mobile-mode details summary { white-space: normal; }
+
+  /* Quote modal mobile */
+  body.mobile-mode .quote-modal {
+    padding: 20px 16px;
+    border-radius: 12px 12px 0 0;
+    max-width: 100%;
+  }
+  body.mobile-mode .quote-header { flex-wrap: wrap; gap: 10px; }
+  body.mobile-mode .quote-info { grid-template-columns: 1fr; gap: 8px; font-size: 12px; }
+  body.mobile-mode .quote-table { font-size: 10px; }
+  body.mobile-mode .quote-table th, body.mobile-mode .quote-table td { padding: 6px 4px; }
+
+  /* Auto mobile mode for small screens (fallback) */
+  @media (max-width: 768px) {
+    body:not(.force-desktop) {
+      /* inherit all mobile-mode styles */
+    }
+  }
+
   @media print {
     body { background: white; }
     .app { padding: 0; max-width: 100%; }
-    header, .panel:not(.quote-panel), .summary, .quote-modal-bg { display: none !important; }
+    header, .panel:not(.quote-panel), .summary, .quote-modal-bg, .mobile-bottom-bar { display: none !important; }
     .quote-modal { box-shadow: none; }
   }
 </style>
@@ -517,6 +715,7 @@
     <div class="header-actions">
       <button class="btn btn-ghost" onclick="exportJSON()">💾 Save</button>
       <button class="btn btn-ghost" onclick="loadJSON()">📂 Load</button>
+      <button class="btn btn-ghost" id="modeToggle" onclick="toggleMode()" title="สลับ Desktop / Mobile view">📱 <span id="modeToggleLabel">Mobile View</span></button>
       <button class="btn btn-primary" onclick="showQuote()">📄 Quotation</button>
     </div>
   </header>
@@ -594,7 +793,11 @@
             <div class="field">
               <label>ML (ความยาวเส้นตัด มม.)</label>
               <input type="number" id="laserML" placeholder="เช่น 1200">
-              <span class="hint">ถ้าไม่ทราบ ใช้ ML วงกลมด้านล่าง</span>
+              <div style="display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap;">
+                <button type="button" class="btn-xs" onclick="autoCalcML()" title="คำนวณ ML จาก 2(W+L) สำหรับสี่เหลี่ยมไม่มีรู">🧮 จากกว้าง×ยาว</button>
+                <button type="button" class="btn-xs" onclick="addHolesToML()" title="บวกความยาวเส้นรอบรูเข้า ML">➕ บวกรู</button>
+              </div>
+              <span class="hint">กรอกตรงๆ หรือกดปุ่มช่วยคำนวณ (สี่เหลี่ยมตรง = 2(W+L))</span>
             </div>
             <div class="field">
               <label>จำนวนรู+1 (H)</label>
@@ -884,6 +1087,18 @@
   </div>
 </div>
 
+<!-- Mobile Bottom Bar (แสดงเฉพาะ mobile mode) -->
+<div class="mobile-bottom-bar" id="mobileBottomBar">
+  <div class="mb-info">
+    <div class="mb-label">ยอดรวม</div>
+    <div class="mb-total">฿<span id="mbTotal">0.00</span></div>
+    <div class="mb-count"><span id="mbCount">0</span> รายการ</div>
+  </div>
+  <button onclick="showQuote()" id="mbQuoteBtn" disabled>
+    <span>📄</span> ใบเสนอราคา
+  </button>
+</div>
+
 <script>
 // ====================== REFERENCE DATA FROM EXCEL ======================
 const LASER_TABLE = {
@@ -1112,6 +1327,58 @@ function getLaserSpec() {
   if (!spec) return null;
   return {material: mat, density: LASER_TABLE[mat].density, ...spec};
 }
+// ====================== ML AUTO-CALCULATION HELPERS ======================
+function autoCalcML() {
+  const w = parseFloat(document.getElementById('laserWidth').value) || 0;
+  const l = parseFloat(document.getElementById('laserLength').value) || 0;
+  if (w === 0 || l === 0) {
+    alert('กรุณากรอกกว้างและยาวก่อน');
+    return;
+  }
+  const ml = 2 * (w + l);
+  document.getElementById('laserML').value = ml;
+  computeLaser();
+  // Show feedback
+  const mlEl = document.getElementById('laserML');
+  mlEl.style.transition = 'background .3s';
+  mlEl.style.background = '#e1f5ee';
+  setTimeout(() => mlEl.style.background = '', 600);
+}
+
+function addHolesToML() {
+  const currentML = parseFloat(document.getElementById('laserML').value) || 0;
+  // Prompt for hole details
+  const input = prompt(
+    '🕳️ เพิ่มความยาวเส้นรอบรูเข้า ML\n\n' +
+    'พิมพ์ในรูปแบบ: จำนวนรู × เส้นผ่านศูนย์กลาง\n' +
+    'เช่น: 4x8  หมายถึง 4 รู ขนาด Ø8 มม.\n' +
+    '      6x10 หมายถึง 6 รู ขนาด Ø10 มม.\n\n' +
+    'หลายขนาด ใช้ comma คั่น เช่น: 4x8, 2x12'
+  );
+  if (!input) return;
+  let totalAdd = 0;
+  let summary = [];
+  const groups = input.split(',').map(s => s.trim());
+  for (const g of groups) {
+    const m = g.match(/^(\d+)\s*[xX×*]\s*(\d+(?:\.\d+)?)$/);
+    if (m) {
+      const count = parseInt(m[1]);
+      const dia = parseFloat(m[2]);
+      const lenAdd = count * Math.PI * dia;
+      totalAdd += lenAdd;
+      summary.push(`${count} รู Ø${dia} = ${lenAdd.toFixed(1)}`);
+    }
+  }
+  if (totalAdd === 0) {
+    alert('รูปแบบไม่ถูกต้อง ลองพิมพ์ "4x8" สำหรับ 4 รู Ø8');
+    return;
+  }
+  const newML = currentML + totalAdd;
+  document.getElementById('laserML').value = newML.toFixed(2);
+  computeLaser();
+  alert(`✓ เพิ่ม ML แล้ว\n\n${summary.join('\n')}\n\nรวมเพิ่ม: ${totalAdd.toFixed(2)} มม.\nML ใหม่: ${newML.toFixed(2)} มม.`);
+}
+
 function computeLaser() {
   const spec = getLaserSpec();
   if (!spec) return;
@@ -1517,6 +1784,65 @@ function renderSummary() {
 function renderAll() {
   renderItems();
   renderSummary();
+  updateMobileBar();
+}
+
+// ====================== MOBILE MODE ======================
+function updateMobileBar() {
+  const grandTotalEl = document.getElementById('grandTotal');
+  const mbTotal = document.getElementById('mbTotal');
+  const mbCount = document.getElementById('mbCount');
+  const mbQuoteBtn = document.getElementById('mbQuoteBtn');
+  if (mbTotal && grandTotalEl) mbTotal.textContent = grandTotalEl.textContent;
+  if (mbCount) mbCount.textContent = items.length;
+  if (mbQuoteBtn) mbQuoteBtn.disabled = items.length === 0;
+}
+
+function toggleMode() {
+  const body = document.body;
+  const isMobileNow = body.classList.contains('mobile-mode');
+  if (isMobileNow) {
+    body.classList.remove('mobile-mode');
+    localStorage.setItem('tgt-view-mode', 'desktop');
+    updateModeButton();
+  } else {
+    body.classList.add('mobile-mode');
+    localStorage.setItem('tgt-view-mode', 'mobile');
+    updateModeButton();
+    // Scroll to top for better mobile UX
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+}
+
+function updateModeButton() {
+  const btn = document.getElementById('modeToggle');
+  const label = document.getElementById('modeToggleLabel');
+  if (!btn) return;
+  const isMobile = document.body.classList.contains('mobile-mode');
+  if (isMobile) {
+    btn.innerHTML = '💻 <span id="modeToggleLabel">Desktop View</span>';
+    btn.title = 'สลับไป Desktop view';
+  } else {
+    btn.innerHTML = '📱 <span id="modeToggleLabel">Mobile View</span>';
+    btn.title = 'สลับไป Mobile view';
+  }
+}
+
+function detectAndApplyMode() {
+  const saved = localStorage.getItem('tgt-view-mode');
+  if (saved === 'mobile') {
+    document.body.classList.add('mobile-mode');
+  } else if (saved === 'desktop') {
+    document.body.classList.remove('mobile-mode');
+  } else {
+    // Auto-detect: ถ้าเป็นอุปกรณ์มือถือ + หน้าจอแคบ → mobile mode
+    const isMobileDevice = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isSmallScreen = window.matchMedia('(max-width: 768px)').matches;
+    if (isMobileDevice || isSmallScreen) {
+      document.body.classList.add('mobile-mode');
+    }
+  }
+  updateModeButton();
 }
 
 // ====================== STORAGE ======================
@@ -1701,11 +2027,30 @@ document.getElementById('quoteDate').value = new Date().toISOString().split('T')
 initLaser();
 loadFromStorage();
 renderReference();
+detectAndApplyMode();
 renderAll();
 
 // Auto-save on input changes
 ['quoteNo','customer','jobName','quoteDate','markup','vat'].forEach(id => {
   document.getElementById(id).addEventListener('input', saveToStorage);
+});
+
+// Listen to window resize to auto-adjust mobile mode (only if no explicit preference)
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    const saved = localStorage.getItem('tgt-view-mode');
+    if (saved) return; // respect user preference
+    const isSmall = window.matchMedia('(max-width: 768px)').matches;
+    if (isSmall && !document.body.classList.contains('mobile-mode')) {
+      document.body.classList.add('mobile-mode');
+      updateModeButton();
+    } else if (!isSmall && document.body.classList.contains('mobile-mode')) {
+      document.body.classList.remove('mobile-mode');
+      updateModeButton();
+    }
+  }, 200);
 });
 </script>
 </body>
