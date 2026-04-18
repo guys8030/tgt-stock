@@ -784,7 +784,7 @@
             <div class="field">
               <label>กว้างชิ้นงาน (มม.)</label>
               <input type="number" id="laserWidth" placeholder="เช่น 200">
-              <span class="hint">กรอกขนาดชิ้นงานจริง</span>
+              <span class="hint">กรอกขนาดจริง ระบบจะบวก +10 เผื่อช่องว่างให้อัตโนมัติ</span>
             </div>
             <div class="field">
               <label>ยาวชิ้นงาน (มม.)</label>
@@ -1400,8 +1400,9 @@ function computeLaser() {
   const timeMin = totalTimeSec / 60;                               // รวม → นาที
   const cutPrice = timeMin * rate;
 
-  // Material: width * length * density * thickness / 1,000,000 = kg
-  const weightKg = w > 0 && l > 0 ? (w * l * spec.density * spec.t) / 1000000 : 0;
+  // Material: (width+10) * (length+10) * density * thickness / 1,000,000 = kg
+  // +10 = เผื่อช่องว่างระหว่างชิ้น (kerf + spacing)
+  const weightKg = w > 0 && l > 0 ? ((w + 10) * (l + 10) * spec.density * spec.t) / 1000000 : 0;
   const materialCost = weightKg * matPrice;
 
   document.getElementById('laserInfo').innerHTML = `
@@ -1412,7 +1413,7 @@ function computeLaser() {
       <div>➤ รวม = ${totalTimeSec.toFixed(2)}s ÷ 60 = <strong>${timeMin.toFixed(4)} นาที</strong></div>
     </div>
     <div>💰 ค่าตัด: ${timeMin.toFixed(4)} นาที × ฿${rate} = <strong>฿${fmt(cutPrice)}</strong></div>
-    <div>⚖️ น้ำหนัก: ${w}×${l}×${spec.density}×${spec.t}÷10⁶ = <strong>${weightKg.toFixed(3)} kg</strong></div>
+    <div>⚖️ น้ำหนัก: (${w}+10)×(${l}+10)×${spec.density}×${spec.t}÷10⁶ = <strong>${weightKg.toFixed(3)} kg</strong></div>
     <div>📦 ค่าวัสดุ: ${weightKg.toFixed(3)} × ฿${matPrice} = <strong>฿${fmt(materialCost)}</strong></div>
     <div style="border-top: 1px solid rgba(12,104,84,.2); margin-top: 6px; padding-top: 6px;">🎯 <strong>รวม/ชิ้น: ฿${fmt(cutPrice + materialCost)}</strong></div>
   `;
