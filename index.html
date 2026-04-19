@@ -500,199 +500,370 @@
   .quote-total-row { background: #f6f7f5; font-weight: 700; }
 
   /* ============================================================
-     MOBILE MODE — เมื่อ body มี class "mobile-mode"
-     หรือเมื่อ screen แคบกว่า 768px (auto)
+     VIEW SYSTEM — สลับ desktop / mobile view
      ============================================================ */
-  body.mobile-mode {
-    --mobile-active: 1;
-    padding-bottom: 80px; /* space for sticky bottom total bar */
+  #mobileView { display: none; }
+  body.view-mobile #desktopView { display: none; }
+  body.view-mobile #mobileView { display: block; }
+  body.view-mobile { background: #f5f6f5; padding-bottom: calc(72px + env(safe-area-inset-bottom, 0)); }
+
+  /* Auto mobile on phone-size */
+  @media (max-width: 768px) {
+    body:not(.view-desktop) #desktopView { display: none; }
+    body:not(.view-desktop) #mobileView { display: block; }
+    body:not(.view-desktop) { background: #f5f6f5; padding-bottom: calc(72px + env(safe-area-inset-bottom, 0)); }
   }
 
-  body.mobile-mode .app { padding: 0; max-width: 100%; }
-
-  /* Header compact */
-  body.mobile-mode header {
-    position: sticky;
-    top: 0;
-    z-index: 40;
-    border-radius: 0;
-    padding: env(safe-area-inset-top, 0) 14px 12px;
-    padding-top: calc(14px + env(safe-area-inset-top, 0));
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-    gap: 8px;
+  /* ============================================================
+     MOBILE VIEW UI
+     ============================================================ */
+  #mobileView {
+    font-family: 'IBM Plex Sans Thai', 'Noto Sans Thai', sans-serif;
+    min-height: 100vh;
   }
-  body.mobile-mode header .brand { gap: 10px; }
-  body.mobile-mode header .logo { width: 40px; height: 40px; font-size: 16px; border-radius: 10px; }
-  body.mobile-mode header h1 { font-size: 16px; }
-  body.mobile-mode header .subtitle {
-    font-size: 10px;
+
+  .mv-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: calc(16px + env(safe-area-inset-top, 0)) 20px 60px;
+    border-radius: 0 0 28px 28px;
+    position: relative;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 200px;
   }
-  body.mobile-mode .header-actions { gap: 6px; }
-  body.mobile-mode .header-actions .btn {
-    padding: 8px 10px;
-    font-size: 12px;
+  .mv-header::before {
+    content: '';
+    position: absolute;
+    right: -60px; top: -60px;
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, var(--cyan) 0%, transparent 60%);
+    opacity: .12;
   }
-  body.mobile-mode #modeToggleLabel { display: none; }
-
-  /* Single column layout */
-  body.mobile-mode .layout { grid-template-columns: 1fr; gap: 10px; padding: 0 12px; }
-
-  /* Panel compact */
-  body.mobile-mode .panel {
-    padding: 14px 16px;
-    border-radius: 12px;
-    margin-bottom: 10px;
-  }
-  body.mobile-mode .panel h2 {
-    font-size: 13px;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-  }
-
-  /* Form grid → single column on mobile */
-  body.mobile-mode .form-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  body.mobile-mode .field input,
-  body.mobile-mode .field select {
-    font-size: 16px; /* ป้องกัน iOS zoom */
-    padding: 10px 12px;
-    min-height: 44px;
-  }
-  body.mobile-mode .field label {
-    font-size: 11px;
-  }
-
-  /* Process tabs → horizontal scroll pills */
-  body.mobile-mode .tabs {
-    overflow-x: auto;
-    padding: 4px;
-    gap: 4px;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-  body.mobile-mode .tabs::-webkit-scrollbar { display: none; }
-  body.mobile-mode .tab {
-    flex: 0 0 auto;
-    min-width: auto;
-    padding: 8px 14px;
-    font-size: 12px;
-    white-space: nowrap;
-  }
-
-  /* Hide right summary panel, show bottom bar instead */
-  body.mobile-mode .right { display: none; }
-
-  body.mobile-mode .mobile-bottom-bar {
-    display: flex !important;
-  }
-
-  /* Bottom sticky bar (hidden on desktop, shown in mobile mode) */
-  .mobile-bottom-bar {
-    display: none;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: white;
-    box-shadow: 0 -4px 16px rgba(13,27,23,.1);
-    padding: 10px 16px;
-    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0));
-    z-index: 30;
+  .mv-header-top {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    border-top: 1px solid var(--line);
+    margin-bottom: 18px;
+    position: relative;
   }
-  .mobile-bottom-bar .mb-info { flex: 1; min-width: 0; }
-  .mobile-bottom-bar .mb-label {
-    font-size: 10px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: .05em;
+  .mv-logo-wrap { display: flex; align-items: center; gap: 10px; }
+  .mv-logo {
+    width: 38px; height: 38px;
+    background: var(--amber);
+    color: var(--primary-dark);
+    border-radius: 10px;
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 14px;
   }
-  .mobile-bottom-bar .mb-total {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
+  .mv-brand { font-size: 20px; font-weight: 700; }
+  .mv-actions { display: flex; gap: 8px; }
+  .mv-icon-btn {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.15);
+    backdrop-filter: blur(8px);
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .mv-icon-btn:active { background: rgba(255,255,255,.3); }
+  .mv-greeting { font-size: 15px; opacity: .9; position: relative; }
+  .mv-greeting strong { font-weight: 600; }
+
+  .mv-summary-card {
+    background: white;
+    margin: -40px 20px 0;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 8px 24px rgba(12, 104, 84, .12);
+    position: relative;
+    z-index: 2;
+  }
+  .mv-summary-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .mv-summary-amount {
+    font-size: 32px; font-weight: 700;
     color: var(--primary-dark);
     line-height: 1.1;
+    display: flex; align-items: baseline; gap: 4px;
   }
-  .mobile-bottom-bar .mb-count {
-    font-size: 11px;
-    color: var(--muted);
+  .mv-summary-amount .cur { font-size: 20px; color: var(--primary); }
+  .mv-summary-meta {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 14px; padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    font-size: 13px; color: var(--muted);
   }
-  .mobile-bottom-bar button {
-    padding: 10px 16px;
-    background: var(--primary);
+  .mv-summary-meta strong { color: var(--primary); font-weight: 600; }
+  .mv-quote-link {
+    color: var(--primary); font-weight: 600; font-size: 13px;
+    background: none; border: none; cursor: pointer; font-family: inherit;
+  }
+  .mv-quote-link:disabled { color: #9aa8a3; cursor: not-allowed; }
+
+  .mv-section { padding: 24px 20px 0; }
+  .mv-section-title {
+    font-size: 14px; font-weight: 600; color: var(--ink);
+    margin-bottom: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .mv-section-title .link { font-size: 12px; color: var(--primary); font-weight: 500; cursor: pointer; background: none; border: none; font-family: inherit; }
+
+  .mv-icon-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 6px; }
+  .mv-icon-item {
+    background: none; border: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 4px; font-family: inherit;
+  }
+  .mv-icon-item:active { transform: scale(.92); }
+  .mv-icon-circle {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: white;
-    border: none;
-    border-radius: 10px;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    display: grid; place-items: center;
+    font-size: 26px;
+    box-shadow: 0 4px 10px rgba(12,104,84,.25);
   }
-  .mobile-bottom-bar button:disabled { opacity: .4; }
+  .mv-icon-circle.amber { background: linear-gradient(145deg, var(--amber) 0%, #dc831a 100%); box-shadow: 0 4px 10px rgba(250,168,25,.35); }
+  .mv-icon-circle.cyan { background: linear-gradient(145deg, var(--cyan) 0%, #2cc2a5 100%); color: var(--primary-dark); box-shadow: 0 4px 10px rgba(77,232,205,.35); }
+  .mv-icon-label { font-size: 12px; color: var(--ink); text-align: center; font-weight: 500; }
 
-  /* Result tables more compact */
-  body.mobile-mode .result-table { font-size: 11px; }
-  body.mobile-mode .result-table th,
-  body.mobile-mode .result-table td { padding: 6px 4px; }
-
-  /* Items list scrolling */
-  body.mobile-mode .items-list { max-height: none; }
-
-  /* Item card mobile layout */
-  body.mobile-mode .item-card { padding: 10px 12px; margin-bottom: 6px; }
-  body.mobile-mode .item-card .item-name { font-size: 13px; }
-  body.mobile-mode .item-card .item-meta { font-size: 10px; }
-  body.mobile-mode .item-card .item-price { font-size: 13px; }
-
-  /* Reference section collapse on mobile */
-  body.mobile-mode details summary { font-size: 12px; }
-
-  /* Add button wider touch target */
-  body.mobile-mode .btn {
-    min-height: 44px;
-    padding: 10px 14px;
+  .mv-quick-strip {
+    display: flex; gap: 10px; overflow-x: auto; padding: 4px 0;
+    margin-top: 8px; scrollbar-width: none;
   }
-
-  /* Info box smaller padding */
-  body.mobile-mode .info-box, body.mobile-mode .warn-box {
-    padding: 8px 10px;
-    font-size: 11px;
+  .mv-quick-strip::-webkit-scrollbar { display: none; }
+  .mv-quick-chip {
+    background: white; border: 1px solid var(--line); border-radius: 20px;
+    padding: 8px 14px;
+    display: flex; align-items: center; gap: 6px;
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    color: var(--ink); white-space: nowrap;
+    cursor: pointer; flex-shrink: 0;
   }
+  .mv-quick-chip:active { background: #f0f3f1; }
 
-  /* Hide Excel compare details on mobile to save space */
-  body.mobile-mode details summary { white-space: normal; }
-
-  /* Quote modal mobile */
-  body.mobile-mode .quote-modal {
-    padding: 20px 16px;
-    border-radius: 12px 12px 0 0;
-    max-width: 100%;
+  .mv-items-empty {
+    background: white; border-radius: 16px;
+    padding: 36px 20px; text-align: center;
   }
-  body.mobile-mode .quote-header { flex-wrap: wrap; gap: 10px; }
-  body.mobile-mode .quote-info { grid-template-columns: 1fr; gap: 8px; font-size: 12px; }
-  body.mobile-mode .quote-table { font-size: 10px; }
-  body.mobile-mode .quote-table th, body.mobile-mode .quote-table td { padding: 6px 4px; }
+  .mv-items-empty .emoji { font-size: 48px; margin-bottom: 12px; opacity: .6; }
+  .mv-items-empty .text { color: var(--muted); font-size: 14px; }
 
-  /* Auto mobile mode for small screens (fallback) */
+  .mv-item-card {
+    background: white; border-radius: 14px;
+    padding: 14px 16px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 1px 2px rgba(13,27,23,.04);
+  }
+  .mv-item-card .ico {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: #f0f3f1; color: var(--primary);
+    display: grid; place-items: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .mv-item-card .info { flex: 1; min-width: 0; }
+  .mv-item-card .name { font-size: 14px; font-weight: 500; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mv-item-card .meta { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mv-item-card .amount { font-size: 15px; font-weight: 600; color: var(--primary-dark); flex-shrink: 0; }
+  .mv-item-card .del {
+    background: transparent; border: none; color: #9aa8a3;
+    font-size: 18px; width: 28px; height: 28px; border-radius: 6px;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .mv-item-card .del:active { background: #ffecec; color: var(--danger); }
+
+  .mv-bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: white;
+    display: none;
+    grid-template-columns: repeat(4, 1fr);
+    padding: 8px 0;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0));
+    box-shadow: 0 -2px 12px rgba(0,0,0,.06);
+    z-index: 40;
+  }
+  body.view-mobile .mv-bottom-nav { display: grid; }
   @media (max-width: 768px) {
-    body:not(.force-desktop) {
-      /* inherit all mobile-mode styles */
-    }
+    body:not(.view-desktop) .mv-bottom-nav { display: grid; }
   }
+  .mv-nav-btn {
+    background: none; border: none; padding: 6px 4px;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    cursor: pointer; font-family: inherit;
+    color: var(--muted); font-size: 10px;
+    position: relative;
+  }
+  .mv-nav-btn .ico { font-size: 22px; line-height: 1; }
+  .mv-nav-btn.active { color: var(--primary); }
+  .mv-nav-btn .badge {
+    position: absolute; top: 2px; right: 28%;
+    background: var(--amber); color: var(--primary-dark);
+    font-size: 9px; font-weight: 700;
+    padding: 1px 5px; border-radius: 8px;
+    min-width: 16px; text-align: center;
+  }
+
+  .mv-page { display: none; }
+  .mv-page.active { display: block; animation: mvSlideIn .2s ease; }
+  @keyframes mvSlideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .mv-detail-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: calc(14px + env(safe-area-inset-top, 0)) 16px 20px;
+    display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 30;
+    border-radius: 0 0 20px 20px;
+  }
+  .mv-back-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(255,255,255,.18);
+    color: white; border: none;
+    font-size: 18px; cursor: pointer; flex-shrink: 0;
+  }
+  .mv-back-btn:active { background: rgba(255,255,255,.3); }
+  .mv-detail-title { font-size: 17px; font-weight: 600; flex: 1; }
+  .mv-detail-sub { font-size: 12px; opacity: .8; }
+
+  .mv-form-wrap { padding: 20px; }
+  .mv-form-group { background: white; border-radius: 16px; padding: 18px; margin-bottom: 12px; }
+  .mv-form-group h3 {
+    font-size: 13px; color: var(--muted); font-weight: 600;
+    margin-bottom: 14px; letter-spacing: .02em;
+  }
+  .mv-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .mv-form-row:last-child { margin-bottom: 0; }
+  .mv-form-row.single { grid-template-columns: 1fr; }
+
+  .mv-field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+  .mv-field input, .mv-field select {
+    width: 100%; padding: 12px 14px;
+    border: 1.5px solid var(--line); border-radius: 10px;
+    background: white; font-family: inherit; font-size: 16px;
+    color: var(--ink); -webkit-appearance: none; appearance: none;
+    min-height: 48px; font-weight: 500;
+  }
+  .mv-field input:focus, .mv-field select:focus {
+    outline: none; border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(12,104,84,.1);
+  }
+  .mv-field .hint { font-size: 11px; color: #9aa8a3; margin-top: 4px; }
+
+  .mv-ml-helpers { display: flex; gap: 8px; margin-top: 8px; }
+  .mv-ml-helper {
+    flex: 1; padding: 8px 10px;
+    background: #f0f3f1; border: 1px solid var(--line);
+    border-radius: 8px; font-family: inherit; font-size: 12px;
+    color: var(--primary); font-weight: 500; cursor: pointer;
+  }
+  .mv-ml-helper:active { background: var(--primary); color: white; }
+
+  .mv-price-display {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white; border-radius: 16px; padding: 18px; margin-bottom: 12px;
+    position: relative; overflow: hidden;
+  }
+  .mv-price-display::before {
+    content: ''; position: absolute;
+    right: -30px; top: -30px; width: 120px; height: 120px;
+    background: radial-gradient(circle, var(--cyan) 0%, transparent 60%);
+    opacity: .15;
+  }
+  .mv-price-display .label { font-size: 12px; opacity: .8; margin-bottom: 4px; position: relative; }
+  .mv-price-display .amount { font-size: 32px; font-weight: 700; position: relative; }
+  .mv-price-display .amount .cur { font-size: 18px; opacity: .7; margin-right: 4px; }
+  .mv-price-display .breakdown {
+    display: flex; gap: 16px; margin-top: 12px; padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,.2);
+    position: relative; font-size: 11px; flex-wrap: wrap;
+  }
+  .mv-price-display .breakdown span { opacity: .9; }
+  .mv-price-display .breakdown .val { font-weight: 600; opacity: 1; }
+
+  .mv-btn-add {
+    width: 100%; padding: 16px;
+    background: linear-gradient(180deg, var(--amber) 0%, #dc831a 100%);
+    color: white; border: none; border-radius: 14px;
+    font-family: inherit; font-size: 15px; font-weight: 600;
+    cursor: pointer; box-shadow: 0 4px 12px rgba(250,168,25,.35);
+    min-height: 52px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 4px;
+  }
+  .mv-btn-add:disabled { background: var(--line); color: #9aa8a3; box-shadow: none; cursor: not-allowed; }
+  .mv-btn-add:active:not(:disabled) { transform: translateY(1px); }
+
+  .mv-pill-row { display: flex; gap: 6px; overflow-x: auto; padding: 4px 0; scrollbar-width: none; }
+  .mv-pill-row::-webkit-scrollbar { display: none; }
+  .mv-pill {
+    background: #f0f3f1; border: 1.5px solid transparent;
+    padding: 8px 14px; border-radius: 10px;
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    color: var(--ink); white-space: nowrap;
+    cursor: pointer; flex-shrink: 0; min-height: 38px;
+  }
+  .mv-pill.active { background: var(--primary); color: white; border-color: var(--primary-dark); }
+
+  .mv-sheet-bg {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 100; display: none;
+    align-items: flex-end; justify-content: center;
+    animation: mvFadeIn .2s;
+  }
+  .mv-sheet-bg.show { display: flex; }
+  @keyframes mvFadeIn { from { opacity: 0; } }
+  @keyframes mvSlideUp { from { transform: translateY(100%); } }
+  .mv-sheet {
+    background: white; width: 100%; max-height: 92vh;
+    border-radius: 24px 24px 0 0;
+    padding: 8px 20px 20px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0));
+    overflow-y: auto;
+    animation: mvSlideUp .25s cubic-bezier(.2,.8,.2,1);
+    -webkit-overflow-scrolling: touch;
+  }
+  .mv-sheet-handle { width: 40px; height: 4px; background: var(--line); border-radius: 2px; margin: 6px auto 14px; }
+  .mv-sheet h3 { font-size: 18px; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px; }
+  .mv-sheet .sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+  .mv-sheet .mv-field + .mv-field { margin-top: 12px; }
+
+  .mv-sheet-actions { display: flex; gap: 8px; margin-top: 16px; }
+  .mv-sheet-btn {
+    flex: 1; padding: 13px; border: none; border-radius: 12px;
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    cursor: pointer; min-height: 48px;
+  }
+  .mv-sheet-btn.primary { background: var(--primary); color: white; }
+  .mv-sheet-btn.secondary { background: #f0f3f1; color: var(--ink); }
+  .mv-sheet-btn.amber { background: var(--amber); color: var(--primary-dark); }
+  .mv-sheet-btn.danger { background: #ffecec; color: var(--danger); }
+  .mv-sheet-btn:active { opacity: .85; }
+
+  .mv-toast {
+    position: fixed; bottom: 100px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary-dark); color: white;
+    padding: 10px 20px; border-radius: 24px;
+    font-size: 13px; font-weight: 500; z-index: 200;
+    opacity: 0; transition: opacity .2s; pointer-events: none;
+  }
+  .mv-toast.show { opacity: 1; }
+
+  .mv-quote-preview {
+    background: white; padding: 16px; border-radius: 12px;
+    border: 1px solid var(--line);
+    font-size: 12px; line-height: 1.6; margin-bottom: 12px;
+  }
+  .mv-quote-preview h4 { color: var(--primary-dark); font-size: 16px; margin-bottom: 4px; }
+  .mv-quote-preview .qsub { font-size: 10px; color: var(--muted); margin-bottom: 12px; }
+  .mv-quote-preview hr { border: none; border-top: 2px solid var(--primary); margin: 8px 0; }
+  .mv-quote-preview table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 11px; }
+  .mv-quote-preview th, .mv-quote-preview td { padding: 4px 6px; text-align: left; border-bottom: 1px solid var(--line); }
+  .mv-quote-preview th { background: #f0f3f1; font-size: 10px; font-weight: 600; }
+  .mv-quote-preview td.num { text-align: right; }
 
   @media print {
     body { background: white; }
@@ -703,6 +874,7 @@
 </style>
 </head>
 <body>
+<div id="desktopView">
 <div class="app">
   <header>
     <div class="brand">
@@ -715,7 +887,7 @@
     <div class="header-actions">
       <button class="btn btn-ghost" onclick="exportJSON()">💾 Save</button>
       <button class="btn btn-ghost" onclick="loadJSON()">📂 Load</button>
-      <button class="btn btn-ghost" id="modeToggle" onclick="toggleMode()" title="สลับ Desktop / Mobile view">📱 <span id="modeToggleLabel">Mobile View</span></button>
+      <button class="btn btn-ghost" onclick="toggleView()" title="สลับเป็น Mobile view">📱 Mobile</button>
       <button class="btn btn-primary" onclick="showQuote()">📄 Quotation</button>
     </div>
   </header>
@@ -1098,6 +1270,146 @@
     <span>📄</span> ใบเสนอราคา
   </button>
 </div>
+</div>
+<!-- end desktopView -->
+
+<!-- ====================== MOBILE VIEW ====================== -->
+<div id="mobileView">
+
+  <!-- Home page -->
+  <div class="mv-page active" id="mvPageHome">
+    <header class="mv-header">
+      <div class="mv-header-top">
+        <div class="mv-logo-wrap">
+          <div class="mv-logo">TGT</div>
+          <div class="mv-brand">TGT</div>
+        </div>
+        <div class="mv-actions">
+          <button class="mv-icon-btn" onclick="toggleView()" aria-label="สลับเป็น Desktop" title="สลับเป็น Desktop">💻</button>
+          <button class="mv-icon-btn" onclick="mvOpenSheet('settings')" aria-label="ตั้งค่า">⚙️</button>
+        </div>
+      </div>
+      <div class="mv-greeting">ระบบคำนวณราคา <strong>TGT Metalworks</strong></div>
+    </header>
+
+    <div class="mv-summary-card">
+      <div class="mv-summary-label">ยอดรวมใบเสนอราคาปัจจุบัน</div>
+      <div class="mv-summary-amount">
+        <span class="cur">฿</span>
+        <span id="mvSummaryAmt">0.00</span>
+      </div>
+      <div class="mv-summary-meta">
+        <div><strong id="mvSummaryCount">0</strong> รายการ</div>
+        <button class="mv-quote-link" onclick="mvOpenSheet('quote')" id="mvQuoteLink" disabled>ดูใบเสนอราคา →</button>
+      </div>
+    </div>
+
+    <div class="mv-section">
+      <div class="mv-section-title"><span>บริการทั้งหมด</span></div>
+      <div class="mv-icon-grid">
+        <button class="mv-icon-item" onclick="mvOpenDetail('laser')">
+          <div class="mv-icon-circle">✂️</div>
+          <div class="mv-icon-label">ตัดเลเซอร์</div>
+        </button>
+        <button class="mv-icon-item" onclick="mvOpenDetail('bend')">
+          <div class="mv-icon-circle">📐</div>
+          <div class="mv-icon-label">พับ</div>
+        </button>
+        <button class="mv-icon-item" onclick="mvOpenDetail('deburr')">
+          <div class="mv-icon-circle">🔧</div>
+          <div class="mv-icon-label">ลบคม</div>
+        </button>
+        <button class="mv-icon-item" onclick="mvOpenDetail('vcut')">
+          <div class="mv-icon-circle">📏</div>
+          <div class="mv-icon-label">V-cut</div>
+        </button>
+        <button class="mv-icon-item" onclick="mvOpenDetail('weld')">
+          <div class="mv-icon-circle">🔥</div>
+          <div class="mv-icon-label">เชื่อม</div>
+        </button>
+        <button class="mv-icon-item" onclick="mvOpenDetail('tap')">
+          <div class="mv-icon-circle">🔩</div>
+          <div class="mv-icon-label">ตาปเกลียว</div>
+        </button>
+        <button class="mv-icon-item" onclick="mvOpenDetail('custom')">
+          <div class="mv-icon-circle amber">✏️</div>
+          <div class="mv-icon-label">กำหนดเอง</div>
+        </button>
+        <button class="mv-icon-item" onclick="mvOpenDetail('circle')">
+          <div class="mv-icon-circle cyan">⭕</div>
+          <div class="mv-icon-label">ML วงกลม</div>
+        </button>
+      </div>
+    </div>
+
+    <div class="mv-section">
+      <div class="mv-section-title"><span>เครื่องมือ</span></div>
+      <div class="mv-quick-strip">
+        <button class="mv-quick-chip" onclick="mvOpenSheet('info')">📋 ข้อมูลงาน</button>
+        <button class="mv-quick-chip" onclick="mvOpenSheet('settings')">⚙️ กำไร/VAT</button>
+        <button class="mv-quick-chip" onclick="exportJSON()">💾 Export</button>
+        <button class="mv-quick-chip" onclick="loadJSON()">📂 Import</button>
+      </div>
+    </div>
+
+    <div class="mv-section">
+      <div class="mv-section-title">
+        <span>รายการในใบเสนอราคา</span>
+        <button class="link" id="mvClearAll" onclick="mvClearAll()" style="display:none">ล้างทั้งหมด</button>
+      </div>
+      <div id="mvItemsList">
+        <div class="mv-items-empty">
+          <div class="emoji">📦</div>
+          <div class="text">ยังไม่มีรายการ<br>เลือกบริการด้านบนเพื่อเพิ่มงาน</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail/form page -->
+  <div class="mv-page" id="mvPageDetail">
+    <div class="mv-detail-header">
+      <button class="mv-back-btn" onclick="mvGoHome()">←</button>
+      <div style="flex:1;min-width:0">
+        <div class="mv-detail-title" id="mvDetailTitle">ตัดเลเซอร์</div>
+        <div class="mv-detail-sub" id="mvDetailSub">กรอกรายละเอียดชิ้นงาน</div>
+      </div>
+    </div>
+    <div class="mv-form-wrap" id="mvFormContent"></div>
+  </div>
+
+  <!-- Bottom navigation -->
+  <nav class="mv-bottom-nav">
+    <button class="mv-nav-btn active" onclick="mvGoHome()">
+      <span class="ico">🏠</span>
+      <span>หน้าหลัก</span>
+    </button>
+    <button class="mv-nav-btn" onclick="mvOpenSheet('items')">
+      <span class="ico">📋</span>
+      <span>รายการ</span>
+      <span class="badge" id="mvNavBadge" style="display:none">0</span>
+    </button>
+    <button class="mv-nav-btn" onclick="mvOpenSheet('quote')">
+      <span class="ico">📄</span>
+      <span>ใบเสนอราคา</span>
+    </button>
+    <button class="mv-nav-btn" onclick="mvOpenSheet('settings')">
+      <span class="ico">⚙️</span>
+      <span>ตั้งค่า</span>
+    </button>
+  </nav>
+
+  <!-- Sheets (modal) -->
+  <div class="mv-sheet-bg" id="mvSheetBg" onclick="mvCloseSheet(event)">
+    <div class="mv-sheet" onclick="event.stopPropagation()">
+      <div class="mv-sheet-handle"></div>
+      <div id="mvSheetBody"></div>
+    </div>
+  </div>
+
+  <div class="mv-toast" id="mvToast"></div>
+</div>
+<!-- end mobileView -->
 
 <script>
 // ====================== REFERENCE DATA FROM EXCEL ======================
@@ -1786,6 +2098,7 @@ function renderAll() {
   renderItems();
   renderSummary();
   updateMobileBar();
+  if (typeof mvRefresh === 'function') mvRefresh();
 }
 
 // ====================== MOBILE MODE ======================
@@ -1799,52 +2112,7 @@ function updateMobileBar() {
   if (mbQuoteBtn) mbQuoteBtn.disabled = items.length === 0;
 }
 
-function toggleMode() {
-  const body = document.body;
-  const isMobileNow = body.classList.contains('mobile-mode');
-  if (isMobileNow) {
-    body.classList.remove('mobile-mode');
-    localStorage.setItem('tgt-view-mode', 'desktop');
-    updateModeButton();
-  } else {
-    body.classList.add('mobile-mode');
-    localStorage.setItem('tgt-view-mode', 'mobile');
-    updateModeButton();
-    // Scroll to top for better mobile UX
-    window.scrollTo({top: 0, behavior: 'smooth'});
-  }
-}
-
-function updateModeButton() {
-  const btn = document.getElementById('modeToggle');
-  const label = document.getElementById('modeToggleLabel');
-  if (!btn) return;
-  const isMobile = document.body.classList.contains('mobile-mode');
-  if (isMobile) {
-    btn.innerHTML = '💻 <span id="modeToggleLabel">Desktop View</span>';
-    btn.title = 'สลับไป Desktop view';
-  } else {
-    btn.innerHTML = '📱 <span id="modeToggleLabel">Mobile View</span>';
-    btn.title = 'สลับไป Mobile view';
-  }
-}
-
-function detectAndApplyMode() {
-  const saved = localStorage.getItem('tgt-view-mode');
-  if (saved === 'mobile') {
-    document.body.classList.add('mobile-mode');
-  } else if (saved === 'desktop') {
-    document.body.classList.remove('mobile-mode');
-  } else {
-    // Auto-detect: ถ้าเป็นอุปกรณ์มือถือ + หน้าจอแคบ → mobile mode
-    const isMobileDevice = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const isSmallScreen = window.matchMedia('(max-width: 768px)').matches;
-    if (isMobileDevice || isSmallScreen) {
-      document.body.classList.add('mobile-mode');
-    }
-  }
-  updateModeButton();
-}
+// (old toggleMode/updateModeButton/detectAndApplyMode removed - replaced by toggleView below)
 
 // ====================== STORAGE ======================
 function saveToStorage() {
@@ -2028,31 +2296,677 @@ document.getElementById('quoteDate').value = new Date().toISOString().split('T')
 initLaser();
 loadFromStorage();
 renderReference();
-detectAndApplyMode();
 renderAll();
 
 // Auto-save on input changes
 ['quoteNo','customer','jobName','quoteDate','markup','vat'].forEach(id => {
-  document.getElementById(id).addEventListener('input', saveToStorage);
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', saveToStorage);
 });
 
-// Listen to window resize to auto-adjust mobile mode (only if no explicit preference)
-let resizeTimer;
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => {
-    const saved = localStorage.getItem('tgt-view-mode');
-    if (saved) return; // respect user preference
-    const isSmall = window.matchMedia('(max-width: 768px)').matches;
-    if (isSmall && !document.body.classList.contains('mobile-mode')) {
-      document.body.classList.add('mobile-mode');
-      updateModeButton();
-    } else if (!isSmall && document.body.classList.contains('mobile-mode')) {
-      document.body.classList.remove('mobile-mode');
-      updateModeButton();
+// ====================== VIEW SWITCHER ======================
+function toggleView() {
+  const body = document.body;
+  const isMobile = body.classList.contains('view-mobile') ||
+    (window.innerWidth <= 768 && !body.classList.contains('view-desktop'));
+  if (isMobile) {
+    body.classList.remove('view-mobile');
+    body.classList.add('view-desktop');
+    try { localStorage.setItem('tgt-view-pref', 'desktop'); } catch(e) {}
+  } else {
+    body.classList.remove('view-desktop');
+    body.classList.add('view-mobile');
+    try { localStorage.setItem('tgt-view-pref', 'mobile'); } catch(e) {}
+    mvRefresh();
+  }
+  window.scrollTo(0, 0);
+}
+
+// Load saved view preference on page load
+(function initView() {
+  try {
+    const pref = localStorage.getItem('tgt-view-pref');
+    if (pref === 'mobile') document.body.classList.add('view-mobile');
+    else if (pref === 'desktop') document.body.classList.add('view-desktop');
+  } catch(e) {}
+})();
+
+// ====================== MOBILE UI ======================
+const MV_PROC_CFG = {
+  laser:  { icon:'✂️', name:'ตัดเลเซอร์', sub:'กรอกรายละเอียดชิ้นงาน' },
+  bend:   { icon:'📐', name:'พับ', sub:'เลือกวัสดุและความยาว' },
+  deburr: { icon:'🔧', name:'ลบคม', sub:'คำนวณตามขนาดงาน' },
+  vcut:   { icon:'📏', name:'V-cut', sub:'เลือกความหนาและความยาว' },
+  weld:   { icon:'🔥', name:'เชื่อม', sub:'คำนวณจากความยาวเชื่อม (ซม.)' },
+  tap:    { icon:'🔩', name:'ตาปเกลียว', sub:'คำนวณตามจำนวนรู' },
+  custom: { icon:'✏️', name:'รายการกำหนดเอง', sub:'กรอกราคาและรายละเอียดเอง' },
+  circle: { icon:'⭕', name:'ML วงกลม', sub:'คำนวณเส้นรอบวง' },
+};
+
+// Mobile form state (separate from desktop state since desktop uses form inputs directly)
+let mvState = {
+  laser:  { mat:'SS400', thick:1.5, w:'', l:'', ml:'', h:'1', qty:'1', name:'' },
+  bend:   { mat:'steel', thick:2, len:'', count:'1', qty:'1', name:'' },
+  deburr: { size:'', qty:'1', name:'' },
+  vcut:   { range:'thin', len:'', count:'1', qty:'1', name:'' },
+  weld:   { mat:'ss400', len:'', qty:'1', name:'' },
+  tap:    { size:'small', holes:'', qty:'1', name:'' },
+  custom: { desc:'', price:'', count:'1' },
+  circle: { od:'', id:'0' },
+  current: null,
+  lastResult: null,
+};
+
+function mvToast(msg) {
+  const t = document.getElementById('mvToast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function mvEsc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function mvGoHome() {
+  document.querySelectorAll('.mv-page').forEach(p => p.classList.remove('active'));
+  document.getElementById('mvPageHome').classList.add('active');
+  mvRefresh();
+  window.scrollTo(0, 0);
+}
+
+function mvOpenDetail(proc) {
+  mvState.current = proc;
+  document.querySelectorAll('.mv-page').forEach(p => p.classList.remove('active'));
+  document.getElementById('mvPageDetail').classList.add('active');
+  const cfg = MV_PROC_CFG[proc];
+  document.getElementById('mvDetailTitle').textContent = cfg.icon + ' ' + cfg.name;
+  document.getElementById('mvDetailSub').textContent = cfg.sub;
+  mvRenderForm(proc);
+  window.scrollTo(0, 0);
+}
+
+function mvRenderForm(proc) {
+  const f = mvState[proc];
+  const wrap = document.getElementById('mvFormContent');
+  let html = '';
+
+  if (proc === 'laser') {
+    html = `
+      <div class="mv-price-display">
+        <div class="label">ราคารวม (สำหรับ <span id="mvPriceQty">1</span> ชิ้น)</div>
+        <div class="amount"><span class="cur">฿</span><span id="mvPriceAmt">0.00</span></div>
+        <div class="breakdown" id="mvPriceBreak"></div>
+      </div>
+      <div class="mv-form-group">
+        <h3>วัสดุ · ความหนา</h3>
+        <div class="mv-field"><label>เลือกวัสดุ</label><div class="mv-pill-row" id="mvMatRow"></div></div>
+        <div class="mv-field" style="margin-top:12px"><label>ความหนา (มม.)</label><div class="mv-pill-row" id="mvThickRow"></div></div>
+      </div>
+      <div class="mv-form-group">
+        <h3>ขนาดและรายละเอียด</h3>
+        <div class="mv-form-row">
+          <div class="mv-field"><label>กว้าง (มม.)</label><input type="number" inputmode="decimal" value="${f.w}" placeholder="0" oninput="mvUpd('laser','w',this.value)"></div>
+          <div class="mv-field"><label>ยาว (มม.)</label><input type="number" inputmode="decimal" value="${f.l}" placeholder="0" oninput="mvUpd('laser','l',this.value)"></div>
+        </div>
+        <div class="mv-form-row">
+          <div class="mv-field"><label>ML (เส้นตัด มม.)</label><input type="number" inputmode="decimal" id="mvFml" value="${f.ml}" placeholder="0" oninput="mvUpd('laser','ml',this.value)"></div>
+          <div class="mv-field"><label>H (จำนวนรู+1)</label><input type="number" inputmode="numeric" value="${f.h}" placeholder="1" oninput="mvUpd('laser','h',this.value)"></div>
+        </div>
+        <div class="mv-ml-helpers">
+          <button class="mv-ml-helper" onclick="mvAutoML()">🧮 จากกว้าง×ยาว</button>
+          <button class="mv-ml-helper" onclick="mvAddHoles()">➕ บวกรู</button>
+        </div>
+        <div class="mv-form-row" style="margin-top:12px">
+          <div class="mv-field"><label>ชื่อชิ้นงาน</label><input type="text" value="${mvEsc(f.name)}" placeholder="เช่น ฝาครอบ" oninput="mvUpd('laser','name',this.value)"></div>
+          <div class="mv-field"><label>จำนวน</label><input type="number" inputmode="numeric" value="${f.qty}" min="1" oninput="mvUpd('laser','qty',this.value)"></div>
+        </div>
+      </div>
+      <button class="mv-btn-add" id="mvAddBtn" onclick="mvAddItem()">➕ เพิ่มเข้าใบเสนอราคา</button>
+    `;
+  } else if (proc === 'bend') {
+    html = `
+      <div class="mv-price-display"><div class="label">ราคารวม</div><div class="amount"><span class="cur">฿</span><span id="mvPriceAmt">0.00</span></div><div class="breakdown" id="mvPriceBreak"></div></div>
+      <div class="mv-form-group">
+        <h3>วัสดุ · ความหนา</h3>
+        <div class="mv-field"><label>วัสดุ</label>
+          <div class="mv-pill-row">
+            <button class="mv-pill ${f.mat==='steel'?'active':''}" onclick="mvSet('bend','mat','steel')">เหล็ก</button>
+            <button class="mv-pill ${f.mat==='sus'?'active':''}" onclick="mvSet('bend','mat','sus')">สแตนเลส</button>
+          </div>
+        </div>
+        <div class="mv-field" style="margin-top:12px"><label>ความหนา (มม.)</label><div class="mv-pill-row" id="mvBendThick"></div></div>
+      </div>
+      <div class="mv-form-group">
+        <h3>ขนาด</h3>
+        <div class="mv-form-row">
+          <div class="mv-field"><label>ยาวพับ (มม.)</label><input type="number" inputmode="decimal" value="${f.len}" placeholder="0" oninput="mvUpd('bend','len',this.value)"></div>
+          <div class="mv-field"><label>จำนวนเส้น</label><input type="number" inputmode="numeric" value="${f.count}" min="1" oninput="mvUpd('bend','count',this.value)"></div>
+        </div>
+        <div class="mv-form-row">
+          <div class="mv-field"><label>ชื่อชิ้นงาน</label><input type="text" value="${mvEsc(f.name||'')}" placeholder="ไม่บังคับ" oninput="mvUpd('bend','name',this.value)"></div>
+          <div class="mv-field"><label>จำนวนชิ้น</label><input type="number" inputmode="numeric" value="${f.qty}" min="1" oninput="mvUpd('bend','qty',this.value)"></div>
+        </div>
+      </div>
+      <button class="mv-btn-add" id="mvAddBtn" onclick="mvAddItem()">➕ เพิ่มเข้าใบเสนอราคา</button>
+    `;
+  } else if (proc === 'deburr') {
+    html = `
+      <div class="mv-price-display"><div class="label">ราคารวม</div><div class="amount"><span class="cur">฿</span><span id="mvPriceAmt">0.00</span></div><div class="breakdown" id="mvPriceBreak"></div></div>
+      <div class="mv-form-group">
+        <h3>ขนาดงาน</h3>
+        <div class="mv-field"><label>ขนาดรวมที่ลบคม (มม.)</label><input type="number" inputmode="decimal" value="${f.size}" placeholder="0" oninput="mvUpd('deburr','size',this.value)"><div class="hint">รวมเส้นรอบนอก + รอบรู</div></div>
+        <div class="mv-form-row" style="margin-top:12px">
+          <div class="mv-field"><label>ชื่อชิ้นงาน</label><input type="text" value="${mvEsc(f.name||'')}" placeholder="ไม่บังคับ" oninput="mvUpd('deburr','name',this.value)"></div>
+          <div class="mv-field"><label>จำนวนชิ้น</label><input type="number" inputmode="numeric" value="${f.qty}" min="1" oninput="mvUpd('deburr','qty',this.value)"></div>
+        </div>
+      </div>
+      <button class="mv-btn-add" id="mvAddBtn" onclick="mvAddItem()">➕ เพิ่มเข้าใบเสนอราคา</button>
+    `;
+  } else if (proc === 'vcut') {
+    html = `
+      <div class="mv-price-display"><div class="label">ราคารวม</div><div class="amount"><span class="cur">฿</span><span id="mvPriceAmt">0.00</span></div><div class="breakdown" id="mvPriceBreak"></div></div>
+      <div class="mv-form-group">
+        <h3>ช่วงความหนา</h3>
+        <div class="mv-pill-row">
+          <button class="mv-pill ${f.range==='thin'?'active':''}" onclick="mvSet('vcut','range','thin')">บาง (0.8-1.5)</button>
+          <button class="mv-pill ${f.range==='thick'?'active':''}" onclick="mvSet('vcut','range','thick')">หนา (2.0-3.0)</button>
+        </div>
+      </div>
+      <div class="mv-form-group">
+        <h3>ขนาด</h3>
+        <div class="mv-form-row">
+          <div class="mv-field"><label>ยาว V-cut (มม.)</label><input type="number" inputmode="decimal" value="${f.len}" placeholder="0" oninput="mvUpd('vcut','len',this.value)"></div>
+          <div class="mv-field"><label>จำนวนเส้น</label><input type="number" inputmode="numeric" value="${f.count}" min="1" oninput="mvUpd('vcut','count',this.value)"></div>
+        </div>
+        <div class="mv-form-row">
+          <div class="mv-field"><label>ชื่อชิ้นงาน</label><input type="text" value="${mvEsc(f.name||'')}" placeholder="ไม่บังคับ" oninput="mvUpd('vcut','name',this.value)"></div>
+          <div class="mv-field"><label>จำนวนชิ้น</label><input type="number" inputmode="numeric" value="${f.qty}" min="1" oninput="mvUpd('vcut','qty',this.value)"></div>
+        </div>
+      </div>
+      <button class="mv-btn-add" id="mvAddBtn" onclick="mvAddItem()">➕ เพิ่มเข้าใบเสนอราคา</button>
+    `;
+  } else if (proc === 'weld') {
+    html = `
+      <div class="mv-price-display"><div class="label">ราคารวม</div><div class="amount"><span class="cur">฿</span><span id="mvPriceAmt">0.00</span></div><div class="breakdown" id="mvPriceBreak"></div></div>
+      <div class="mv-form-group">
+        <h3>วัสดุ</h3>
+        <div class="mv-pill-row">
+          <button class="mv-pill ${f.mat==='ss400'?'active':''}" onclick="mvSet('weld','mat','ss400')">SS400 · ฿5/ซม.</button>
+          <button class="mv-pill ${f.mat==='sus304'?'active':''}" onclick="mvSet('weld','mat','sus304')">SUS304 · ฿10/ซม.</button>
+        </div>
+      </div>
+      <div class="mv-form-group">
+        <h3>ความยาวเชื่อม</h3>
+        <div class="mv-form-row">
+          <div class="mv-field"><label>ความยาว (ซม.)</label><input type="number" inputmode="decimal" value="${f.len}" placeholder="0" oninput="mvUpd('weld','len',this.value)"><div class="hint">เซนติเมตร ไม่ใช่ มม.</div></div>
+          <div class="mv-field"><label>จำนวนชิ้น</label><input type="number" inputmode="numeric" value="${f.qty}" min="1" oninput="mvUpd('weld','qty',this.value)"></div>
+        </div>
+        <div class="mv-form-row single">
+          <div class="mv-field"><label>ชื่อชิ้นงาน</label><input type="text" value="${mvEsc(f.name||'')}" placeholder="ไม่บังคับ" oninput="mvUpd('weld','name',this.value)"></div>
+        </div>
+      </div>
+      <button class="mv-btn-add" id="mvAddBtn" onclick="mvAddItem()">➕ เพิ่มเข้าใบเสนอราคา</button>
+    `;
+  } else if (proc === 'tap') {
+    html = `
+      <div class="mv-price-display"><div class="label">ราคารวม</div><div class="amount"><span class="cur">฿</span><span id="mvPriceAmt">0.00</span></div><div class="breakdown" id="mvPriceBreak"></div></div>
+      <div class="mv-form-group">
+        <h3>ขนาดเกลียว</h3>
+        <div class="mv-pill-row">
+          <button class="mv-pill ${f.size==='small'?'active':''}" onclick="mvSet('tap','size','small')">M1-M5 · ฿30/รู</button>
+          <button class="mv-pill ${f.size==='large'?'active':''}" onclick="mvSet('tap','size','large')">M6-M30 · ฿50/รู</button>
+        </div>
+      </div>
+      <div class="mv-form-group">
+        <h3>จำนวน</h3>
+        <div class="mv-form-row">
+          <div class="mv-field"><label>จำนวนรู</label><input type="number" inputmode="numeric" value="${f.holes}" placeholder="0" oninput="mvUpd('tap','holes',this.value)"></div>
+          <div class="mv-field"><label>จำนวนชิ้น</label><input type="number" inputmode="numeric" value="${f.qty}" min="1" oninput="mvUpd('tap','qty',this.value)"></div>
+        </div>
+        <div class="mv-form-row single">
+          <div class="mv-field"><label>ชื่อชิ้นงาน</label><input type="text" value="${mvEsc(f.name||'')}" placeholder="ไม่บังคับ" oninput="mvUpd('tap','name',this.value)"></div>
+        </div>
+      </div>
+      <button class="mv-btn-add" id="mvAddBtn" onclick="mvAddItem()">➕ เพิ่มเข้าใบเสนอราคา</button>
+    `;
+  } else if (proc === 'custom') {
+    html = `
+      <div class="mv-price-display"><div class="label">ราคารวม</div><div class="amount"><span class="cur">฿</span><span id="mvPriceAmt">0.00</span></div><div class="breakdown" id="mvPriceBreak"></div></div>
+      <div class="mv-form-group">
+        <h3>รายการกำหนดเอง</h3>
+        <div class="mv-field"><label>รายละเอียด</label><input type="text" value="${mvEsc(f.desc)}" placeholder="เช่น ค่าพ่นสี" oninput="mvUpd('custom','desc',this.value)"></div>
+        <div class="mv-form-row" style="margin-top:12px">
+          <div class="mv-field"><label>ราคา/หน่วย (฿)</label><input type="number" inputmode="decimal" value="${f.price}" placeholder="0" oninput="mvUpd('custom','price',this.value)"></div>
+          <div class="mv-field"><label>จำนวน</label><input type="number" inputmode="decimal" value="${f.count}" min="0" step="0.01" oninput="mvUpd('custom','count',this.value)"></div>
+        </div>
+      </div>
+      <button class="mv-btn-add" id="mvAddBtn" onclick="mvAddItem()">➕ เพิ่มเข้าใบเสนอราคา</button>
+    `;
+  } else if (proc === 'circle') {
+    html = `
+      <div class="mv-price-display" style="background:linear-gradient(135deg,#4de8cd,#2cc2a5);color:#0a3a31">
+        <div class="label" style="opacity:.7">ML วงกลม (เส้นรอบวง)</div>
+        <div class="amount"><span id="mvCircleML">0.00</span><span style="font-size:16px;opacity:.7;margin-left:4px">มม.</span></div>
+        <div class="breakdown">สูตร: π × OD + π × ID</div>
+      </div>
+      <div class="mv-form-group">
+        <h3>เส้นผ่านศูนย์กลาง</h3>
+        <div class="mv-form-row">
+          <div class="mv-field"><label>OD (นอก - มม.)</label><input type="number" inputmode="decimal" value="${f.od}" placeholder="0" oninput="mvUpd('circle','od',this.value)"></div>
+          <div class="mv-field"><label>ID (ใน - มม.)</label><input type="number" inputmode="decimal" value="${f.id}" placeholder="0" oninput="mvUpd('circle','id',this.value)"><div class="hint">ถ้าไม่มีรู ใส่ 0</div></div>
+        </div>
+      </div>
+      <button class="mv-btn-add" id="mvAddBtn" onclick="mvUseCircleML()">📋 ใช้ค่านี้ในตัดเลเซอร์</button>
+    `;
+  }
+
+  wrap.innerHTML = html;
+
+  if (proc === 'laser') mvRenderLaserPills();
+  else if (proc === 'bend') mvRenderBendPills();
+  mvCompute();
+}
+
+function mvRenderLaserPills() {
+  const f = mvState.laser;
+  document.getElementById('mvMatRow').innerHTML = Object.keys(LASER_TABLE).map(m =>
+    `<button class="mv-pill ${m===f.mat?'active':''}" onclick="mvSet('laser','mat','${m}')">${m}</button>`
+  ).join('');
+  const items = LASER_TABLE[f.mat]?.items || [];
+  if (!items.find(x => x.t === f.thick)) { f.thick = items[0]?.t; }
+  document.getElementById('mvThickRow').innerHTML = items.map(x =>
+    `<button class="mv-pill ${x.t===f.thick?'active':''}" onclick="mvSet('laser','thick',${x.t})">${x.t}</button>`
+  ).join('');
+}
+
+function mvRenderBendPills() {
+  const f = mvState.bend;
+  document.getElementById('mvBendThick').innerHTML = [1,2,3,4,5,6,8,10].map(t =>
+    `<button class="mv-pill ${t===f.thick?'active':''}" onclick="mvSet('bend','thick',${t})">${t}</button>`
+  ).join('');
+}
+
+function mvSet(proc, key, val) {
+  mvState[proc][key] = val;
+  if (proc === 'laser' && (key === 'mat' || key === 'thick')) mvRenderLaserPills();
+  if (proc === 'bend' && (key === 'mat' || key === 'thick')) mvRenderBendPills();
+  if ((proc === 'vcut' || proc === 'weld' || proc === 'tap') && (key === 'range' || key === 'mat' || key === 'size')) {
+    mvRenderForm(proc);
+  } else {
+    mvCompute();
+  }
+  mvSave();
+}
+
+function mvUpd(proc, key, val) {
+  mvState[proc][key] = val;
+  mvCompute();
+  mvSave();
+}
+
+function mvCompute() {
+  const proc = mvState.current;
+  if (!proc) return;
+  let r = null;
+  const f = mvState[proc];
+
+  if (proc === 'laser') {
+    const spec = LASER_TABLE[f.mat]?.items.find(x => x.t === f.thick);
+    if (spec) {
+      const w = +f.w||0, l = +f.l||0, ml = +f.ml||0, h = +f.h||0, qty = +f.qty||1;
+      if (ml || w || l) {
+        const time = ml > 0 ? ((ml/spec.feed)*60 + h*spec.piercing)/60 : 0;
+        const cut = time * spec.rate;
+        const wt = w>0 && l>0 ? ((w+10)*(l+10)*LASER_TABLE[f.mat].density*spec.t)/1000000 : 0;
+        const mat = wt * spec.matPrice;
+        const unit = cut + mat;
+        if (unit > 0) {
+          r = {
+            valid: true, total: unit * qty, unit, qty,
+            proc: 'laser',
+            name: f.name || `${f.mat} ${spec.t}mm · ${w||'?'}×${l||'?'}`,
+            description: `${f.mat} ${spec.t}mm · ${w}×${l} · ML${ml}`,
+            breakdown: `<span>ตัด <span class="val">฿${fmt(cut)}</span></span><span>วัสดุ <span class="val">฿${fmt(mat)}</span></span><span>เวลา <span class="val">${time.toFixed(2)}น.</span></span>`,
+          };
+        }
+      }
     }
-  }, 200);
-});
+  } else if (proc === 'bend') {
+    const len = +f.len||0, count = +f.count||1, qty = +f.qty||1;
+    if (len) {
+      const range = BEND_TABLE[f.mat]?.find(r => len >= r.min && len <= r.max);
+      if (range && range.prices[f.thick] !== undefined) {
+        const price = range.prices[f.thick];
+        const unit = price * count;
+        r = {
+          valid: true, total: unit*qty, unit, qty, proc: 'bend',
+          name: f.name || `พับ ${f.mat==='steel'?'เหล็ก':'SUS'} ${f.thick}mm`,
+          description: `${f.mat==='steel'?'เหล็ก':'SUS'} ${f.thick}mm · ${len}mm × ${count} เส้น`,
+          breakdown: `<span>฿${price}/เส้น</span><span>${count} เส้น</span><span>× ${qty}</span>`,
+        };
+      }
+    }
+  } else if (proc === 'deburr') {
+    const size = +f.size||0, qty = +f.qty||1;
+    if (size) {
+      const range = DEBURR_TABLE.find(r => size >= r.min && size <= r.max);
+      if (range) {
+        r = {
+          valid: true, total: range.price*qty, unit: range.price, qty, proc: 'deburr',
+          name: f.name || `ลบคม ${size}mm`,
+          description: `ขนาดรวม ${size}mm`,
+          breakdown: `<span>฿${range.price}/ชิ้น</span><span>× ${qty}</span>`,
+        };
+      }
+    }
+  } else if (proc === 'vcut') {
+    const len = +f.len||0, count = +f.count||1, qty = +f.qty||1;
+    if (len) {
+      const range = VCUT_TABLE[f.range]?.find(r => len >= r.min && len <= r.max);
+      if (range) {
+        const unit = range.price * count;
+        r = {
+          valid: true, total: unit*qty, unit, qty, proc: 'vcut',
+          name: f.name || `V-cut ${f.range==='thin'?'บาง':'หนา'}`,
+          description: `${f.range==='thin'?'0.8-1.5mm':'2.0-3.0mm'} · ${len}mm × ${count} เส้น`,
+          breakdown: `<span>฿${range.price}/เส้น</span><span>${count} เส้น</span><span>× ${qty}</span>`,
+        };
+      }
+    }
+  } else if (proc === 'weld') {
+    const len = +f.len||0, qty = +f.qty||1;
+    if (len) {
+      const rate = f.mat === 'ss400' ? 5 : 10;
+      const unit = len * rate;
+      r = {
+        valid: true, total: unit*qty, unit, qty, proc: 'weld',
+        name: f.name || `เชื่อม ${f.mat.toUpperCase()}`,
+        description: `${len} ซม. @ ฿${rate}/ซม.`,
+        breakdown: `<span>฿${rate}/ซม.</span><span>${len} ซม.</span><span>× ${qty}</span>`,
+      };
+    }
+  } else if (proc === 'tap') {
+    const holes = +f.holes||0, qty = +f.qty||1;
+    if (holes) {
+      const rate = f.size === 'small' ? 30 : 50;
+      const unit = holes * rate;
+      r = {
+        valid: true, total: unit*qty, unit, qty, proc: 'tap',
+        name: f.name || `ตาป ${f.size==='small'?'M1-M5':'M6-M30'}`,
+        description: `${holes} รู @ ฿${rate}/รู`,
+        breakdown: `<span>฿${rate}/รู</span><span>${holes} รู</span><span>× ${qty}</span>`,
+      };
+    }
+  } else if (proc === 'custom') {
+    const price = +f.price||0, count = +f.count||0;
+    if (f.desc && price && count) {
+      const unit = price * count;
+      r = {
+        valid: true, total: unit, unit, qty: 1, proc: 'custom',
+        name: f.desc,
+        description: `${count} × ฿${fmt(price)}`,
+        breakdown: `<span>฿${fmt(price)}/หน่วย</span><span>× ${count}</span>`,
+      };
+    }
+  } else if (proc === 'circle') {
+    const ml = Math.PI * (+f.od||0) + Math.PI * (+f.id||0);
+    const el = document.getElementById('mvCircleML');
+    if (el) el.textContent = ml.toFixed(2);
+    const addBtn = document.getElementById('mvAddBtn');
+    if (addBtn) addBtn.disabled = ml === 0;
+    return;
+  }
+
+  const amtEl = document.getElementById('mvPriceAmt');
+  const brkEl = document.getElementById('mvPriceBreak');
+  const qtyEl = document.getElementById('mvPriceQty');
+  const addBtn = document.getElementById('mvAddBtn');
+
+  if (!r || !r.valid) {
+    if (amtEl) amtEl.textContent = '0.00';
+    if (brkEl) brkEl.innerHTML = '';
+    if (addBtn) addBtn.disabled = true;
+    mvState.lastResult = null;
+    return;
+  }
+  if (amtEl) amtEl.textContent = fmt(r.total);
+  if (brkEl) brkEl.innerHTML = r.breakdown;
+  if (qtyEl) qtyEl.textContent = r.qty;
+  if (addBtn) addBtn.disabled = false;
+  mvState.lastResult = r;
+}
+
+function mvAutoML() {
+  const f = mvState.laser;
+  const w = +f.w||0, l = +f.l||0;
+  if (!w || !l) { mvToast('⚠️ กรอกกว้างและยาวก่อน'); return; }
+  const ml = 2 * (w + l);
+  mvState.laser.ml = String(ml);
+  const el = document.getElementById('mvFml'); if (el) el.value = ml;
+  mvCompute(); mvSave();
+  mvToast(`✓ ML = ${ml} มม.`);
+}
+
+function mvAddHoles() {
+  const input = prompt('บวกความยาวรอบรูเข้า ML\n\nพิมพ์: จำนวน×ขนาด\nเช่น: 4x8 (4 รู Ø8)\n      4x8, 2x12');
+  if (!input) return;
+  let total = 0, parts = [];
+  for (const g of input.split(',')) {
+    const m = g.trim().match(/^(\d+)\s*[xX×*]\s*(\d+(?:\.\d+)?)$/);
+    if (m) {
+      total += parseInt(m[1]) * Math.PI * parseFloat(m[2]);
+      parts.push(`${m[1]}×Ø${m[2]}`);
+    }
+  }
+  if (total === 0) { mvToast('⚠️ รูปแบบไม่ถูก'); return; }
+  const cur = +mvState.laser.ml||0;
+  const newML = cur + total;
+  mvState.laser.ml = newML.toFixed(2);
+  const el = document.getElementById('mvFml'); if (el) el.value = newML.toFixed(2);
+  mvCompute(); mvSave();
+  mvToast(`✓ +${total.toFixed(1)}mm (${parts.join(', ')})`);
+}
+
+function mvUseCircleML() {
+  const f = mvState.circle;
+  const ml = Math.PI * (+f.od||0) + Math.PI * (+f.id||0);
+  if (ml === 0) return;
+  mvState.laser.ml = ml.toFixed(2);
+  mvSave();
+  mvOpenDetail('laser');
+  mvToast(`✓ ใช้ ML = ${ml.toFixed(2)} มม.`);
+}
+
+// Add item — integrates with desktop's `items` array
+function mvAddItem() {
+  const r = mvState.lastResult;
+  if (!r || !r.valid) { mvToast('⚠️ กรอกไม่ครบ'); return; }
+  // items array is shared with desktop code
+  items.push({
+    id: Date.now(),
+    proc: r.proc,
+    name: r.name,
+    description: r.description,
+    qty: r.qty,
+    unitPrice: r.unit,
+    total: r.total,
+  });
+  saveToStorage();  // desktop's save function
+  renderItems(); // desktop's render (safe to call even if hidden)
+  mvRefresh();
+  mvToast('✓ เพิ่มแล้ว');
+  if (navigator.vibrate) navigator.vibrate(10);
+
+  // Clear form fields of current proc
+  const proc = mvState.current;
+  if (proc === 'laser') { mvState.laser.w=''; mvState.laser.l=''; mvState.laser.ml=''; mvState.laser.h='1'; mvState.laser.qty='1'; mvState.laser.name=''; }
+  else if (proc === 'bend') { mvState.bend.len=''; mvState.bend.qty='1'; mvState.bend.name=''; }
+  else if (proc === 'deburr') { mvState.deburr.size=''; mvState.deburr.qty='1'; mvState.deburr.name=''; }
+  else if (proc === 'vcut') { mvState.vcut.len=''; mvState.vcut.qty='1'; mvState.vcut.name=''; }
+  else if (proc === 'weld') { mvState.weld.len=''; mvState.weld.qty='1'; mvState.weld.name=''; }
+  else if (proc === 'tap') { mvState.tap.holes=''; mvState.tap.qty='1'; mvState.tap.name=''; }
+  else if (proc === 'custom') { mvState.custom.desc=''; mvState.custom.price=''; mvState.custom.count='1'; }
+  mvRenderForm(proc);
+}
+
+function mvDelItem(id) {
+  if (!confirm('ลบรายการนี้?')) return;
+  const idx = items.findIndex(i => i.id === id);
+  if (idx !== -1) { items.splice(idx, 1); saveToStorage(); renderItems(); mvRefresh(); }
+  // Re-render items sheet if open
+  const sheet = document.getElementById('mvSheetBg');
+  if (sheet && sheet.classList.contains('show')) {
+    const body = document.getElementById('mvSheetBody');
+    if (body.innerHTML.includes('data-items-list')) mvOpenSheet('items');
+  }
+}
+
+function mvClearAll() {
+  if (!confirm('ล้างรายการทั้งหมด?')) return;
+  items.length = 0;
+  saveToStorage();
+  renderItems();
+  mvRefresh();
+}
+
+function mvRefresh() {
+  const total = items.reduce((a, i) => a + (i.total || 0), 0);
+  const amtEl = document.getElementById('mvSummaryAmt');
+  const cntEl = document.getElementById('mvSummaryCount');
+  const qLink = document.getElementById('mvQuoteLink');
+  const clearBtn = document.getElementById('mvClearAll');
+  const badge = document.getElementById('mvNavBadge');
+  if (amtEl) amtEl.textContent = fmt(total);
+  if (cntEl) cntEl.textContent = items.length;
+  if (qLink) qLink.disabled = items.length === 0;
+  if (items.length > 0) {
+    if (badge) { badge.textContent = items.length; badge.style.display = ''; }
+    if (clearBtn) clearBtn.style.display = '';
+  } else {
+    if (badge) badge.style.display = 'none';
+    if (clearBtn) clearBtn.style.display = 'none';
+  }
+  mvRenderItemsList();
+}
+
+function mvRenderItemsList() {
+  const list = document.getElementById('mvItemsList');
+  if (!list) return;
+  if (items.length === 0) {
+    list.innerHTML = `<div class="mv-items-empty"><div class="emoji">📦</div><div class="text">ยังไม่มีรายการ<br>เลือกบริการด้านบนเพื่อเพิ่มงาน</div></div>`;
+    return;
+  }
+  list.innerHTML = items.slice().reverse().map(it => {
+    const icon = MV_PROC_CFG[it.proc]?.icon || '•';
+    return `
+      <div class="mv-item-card">
+        <div class="ico">${icon}</div>
+        <div class="info">
+          <div class="name">${mvEsc(it.name)}</div>
+          <div class="meta">${mvEsc(it.description || '')} · ×${it.qty}</div>
+        </div>
+        <div class="amount">฿${fmt(it.total)}</div>
+        <button class="del" onclick="mvDelItem(${it.id})">✕</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function mvOpenSheet(type) {
+  const body = document.getElementById('mvSheetBody');
+  if (type === 'info') {
+    // Use shared info — pull from desktop form if available
+    const qno = document.getElementById('quoteNo')?.value || '';
+    const cus = document.getElementById('customer')?.value || '';
+    const job = document.getElementById('jobName')?.value || '';
+    body.innerHTML = `
+      <h3>ข้อมูลงาน</h3>
+      <div class="sub">ข้อมูลสำหรับใบเสนอราคา</div>
+      <div class="mv-field"><label>เลขที่ใบเสนอราคา</label><input type="text" value="${mvEsc(qno)}" oninput="mvSetInfo('quoteNo',this.value)"></div>
+      <div class="mv-field"><label>ชื่อลูกค้า</label><input type="text" value="${mvEsc(cus)}" oninput="mvSetInfo('customer',this.value)"></div>
+      <div class="mv-field"><label>ชื่องาน</label><input type="text" value="${mvEsc(job)}" oninput="mvSetInfo('jobName',this.value)"></div>
+      <div class="mv-sheet-actions"><button class="mv-sheet-btn primary" onclick="mvCloseSheet()">เสร็จสิ้น</button></div>
+    `;
+  } else if (type === 'settings') {
+    const mu = document.getElementById('markup')?.value || '20';
+    const vt = document.getElementById('vat')?.value || '7';
+    body.innerHTML = `
+      <h3>ตั้งค่า</h3>
+      <div class="sub">กำไร, VAT, และข้อมูลเพิ่มเติม</div>
+      <div class="mv-form-row">
+        <div class="mv-field"><label>กำไร / Markup (%)</label><input type="number" inputmode="decimal" value="${mu}" oninput="mvSetInfo('markup',this.value)"></div>
+        <div class="mv-field"><label>VAT (%)</label><input type="number" inputmode="decimal" value="${vt}" oninput="mvSetInfo('vat',this.value)"></div>
+      </div>
+      <div class="mv-sheet-actions" style="margin-top:16px">
+        <button class="mv-sheet-btn secondary" onclick="exportJSON()">💾 Export</button>
+        <button class="mv-sheet-btn secondary" onclick="loadJSON()">📂 Import</button>
+      </div>
+      <div class="mv-sheet-actions" style="margin-top:8px">
+        <button class="mv-sheet-btn danger" onclick="mvCloseSheet(); setTimeout(mvClearAll, 100)">🗑 ล้างรายการทั้งหมด</button>
+      </div>
+      <div class="mv-sheet-actions" style="margin-top:8px">
+        <button class="mv-sheet-btn primary" onclick="mvCloseSheet()">เสร็จสิ้น</button>
+      </div>
+    `;
+  } else if (type === 'items') {
+    const total = items.reduce((a,i)=>a+(i.total||0),0);
+    body.innerHTML = `
+      <h3>รายการ</h3>
+      <div class="sub">${items.length} รายการ · รวม ฿${fmt(total)}</div>
+      <div data-items-list>${
+        items.length === 0
+          ? `<div class="mv-items-empty"><div class="emoji">📦</div><div class="text">ยังไม่มีรายการ</div></div>`
+          : items.slice().reverse().map(it => `
+              <div class="mv-item-card">
+                <div class="ico">${MV_PROC_CFG[it.proc]?.icon || '•'}</div>
+                <div class="info">
+                  <div class="name">${mvEsc(it.name)}</div>
+                  <div class="meta">${mvEsc(it.description||'')} · ×${it.qty}</div>
+                </div>
+                <div class="amount">฿${fmt(it.total)}</div>
+                <button class="del" onclick="mvDelItem(${it.id})">✕</button>
+              </div>
+            `).join('')
+      }</div>
+      <div class="mv-sheet-actions">
+        <button class="mv-sheet-btn primary" onclick="mvCloseSheet(); setTimeout(()=>mvOpenSheet('quote'),100)" ${items.length===0?'disabled':''}>📄 ดูใบเสนอราคา</button>
+        <button class="mv-sheet-btn secondary" onclick="mvCloseSheet()">ปิด</button>
+      </div>
+    `;
+  } else if (type === 'quote') {
+    // Reuse desktop's showQuote modal. Close mobile sheet first.
+    document.getElementById('mvSheetBg').classList.remove('show');
+    if (typeof showQuote === 'function') showQuote();
+    return;
+  }
+  document.getElementById('mvSheetBg').classList.add('show');
+}
+
+function mvCloseSheet(e) {
+  if (e && e.target.id !== 'mvSheetBg') return;
+  document.getElementById('mvSheetBg').classList.remove('show');
+}
+
+function mvSetInfo(field, val) {
+  const el = document.getElementById(field);
+  if (el) { el.value = val; if (typeof saveToStorage === 'function') saveToStorage(); }
+}
+
+function mvSave() {
+  try { localStorage.setItem('tgt-mv-state', JSON.stringify(mvState)); } catch(e) {}
+}
+
+function mvLoad() {
+  try {
+    const s = JSON.parse(localStorage.getItem('tgt-mv-state') || 'null');
+    if (s) Object.assign(mvState, s);
+  } catch(e) {}
+}
+
+// Init mobile on load
+mvLoad();
+mvRefresh();
 </script>
 </body>
 </html>
